@@ -19,7 +19,7 @@ class Lock
      */
     public function __construct()
     {
-        return $lock = new RedisLock();
+        self::$lock = new RedisLock();
     }
 
     /**
