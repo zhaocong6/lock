@@ -63,17 +63,17 @@ class RedisLock extends LockInterface
      * @throws \Exception
      */
 
-    public function waitLock($closure, $lock_val, $expiration = 60, $wait_time = 20000)
+    public function queueLock($closure, $lock_val, $expiration = 60, $wait_time = 20000)
     {
-        $this->initWaitLockProcess($lock_val);
+        $this->initQueueLockProcess($lock_val);
 
-        $this->addWaitLockProcess();
+        $this->addQueueLockProcess();
 
         loop:
         if ( $this->redis->set($lock_val, true, 'nx', 'ex', $expiration) ) {
             $closure($this->redis);
 
-            $this->delWaitLockProcess();
+            $this->delQueueLockProcess();
 
             $this->delLock($lock_val);
         }else{
@@ -87,18 +87,18 @@ class RedisLock extends LockInterface
      * @param $lock_val
      * @return string
      */
-    private function setWaitLockProcessName($lock_val)
+    private function setQueueLockProcessName($lock_val)
     {
-        return $this->wait_lock_process_name = 'waitLock:process:'.$lock_val;
+        return $this->wait_lock_process_name = 'queueLock:process:'.$lock_val;
     }
 
     /**
      * 初始化等待锁的进程数量
      * @param $lock_val
      */
-    private function initWaitLockProcess($lock_val)
+    private function initQueueLockProcess($lock_val)
     {
-        $wait_lock_process_name = $this->setWaitLockProcessName($lock_val);
+        $wait_lock_process_name = $this->setQueueLockProcessName($lock_val);
 
         $this->redis->setnx($wait_lock_process_name, 0);
     }
@@ -107,7 +107,7 @@ class RedisLock extends LockInterface
      * 新增等待进程
      * @throws \Exception
      */
-    private function addWaitLockProcess()
+    private function addQueueLockProcess()
     {
         $current_wait_process = $this->redis->get($this->wait_lock_process_name);
 
@@ -122,7 +122,7 @@ class RedisLock extends LockInterface
     /**
      * 删除当前等待进程
      */
-    private function delWaitLockProcess()
+    private function delQueueLockProcess()
     {
         $this->redis->decr($this->wait_lock_process_name);
     }
