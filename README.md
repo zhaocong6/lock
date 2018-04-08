@@ -2,7 +2,7 @@
     
     1.PHP >= 5.6
     2.composer
-    3.predis包
+    3.predis
     
 # 安装     
     composer require nabao/lock
