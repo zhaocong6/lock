@@ -17,11 +17,11 @@ class RedisLock extends LockInterface
     //缓存redis
     private $redis;
 
-    //最大同时等待锁的 进程数量
+    //队列锁最大进程进程数量
     private $max_wait_process = 50;
 
-    //等待进程名称
-    private $wait_lock_process_name;
+    //进程名称
+    private $queue_lock_process_name;
 
     /**
      * RedisLock constructor.
@@ -89,7 +89,7 @@ class RedisLock extends LockInterface
      */
     private function setQueueLockProcessName($lock_val)
     {
-        return $this->wait_lock_process_name = 'queueLock:process:'.$lock_val;
+        return $this->queue_lock_process_name = 'queueLock:process:'.$lock_val;
     }
 
     /**
@@ -98,9 +98,9 @@ class RedisLock extends LockInterface
      */
     private function initQueueLockProcess($lock_val)
     {
-        $wait_lock_process_name = $this->setQueueLockProcessName($lock_val);
+        $queue_lock_process_name = $this->setQueueLockProcessName($lock_val);
 
-        $this->redis->setnx($wait_lock_process_name, 0);
+        $this->redis->setnx($queue_lock_process_name, 0);
     }
 
     /**
@@ -109,13 +109,13 @@ class RedisLock extends LockInterface
      */
     private function addQueueLockProcess()
     {
-        $current_wait_process = $this->redis->get($this->wait_lock_process_name);
+        $current_wait_process = $this->redis->get($this->queue_lock_process_name);
 
         if ($current_wait_process >= $this->max_wait_process){
             throw new LockException('操作频繁, 被服务器拒绝!');
         }else{
-            $this->redis->incr($this->wait_lock_process_name);
-            $this->redis->expire($this->wait_lock_process_name, 120);
+            $this->redis->incr($this->queue_lock_process_name);
+            $this->redis->expire($this->queue_lock_process_name, 120);
         }
     }
 
@@ -124,7 +124,7 @@ class RedisLock extends LockInterface
      */
     private function delQueueLockProcess()
     {
-        $this->redis->decr($this->wait_lock_process_name);
+        $this->redis->decr($this->queue_lock_process_name);
     }
 
     /**
