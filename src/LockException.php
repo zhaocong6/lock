@@ -6,7 +6,7 @@
  * Time: 上午11:57
  */
 
-namespace NaBao\Lock;
+namespace Lock;
 
 
 class LockException extends \Exception

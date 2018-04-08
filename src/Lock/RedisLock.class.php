@@ -6,10 +6,10 @@
  * Time: 下午9:13
  */
 
-namespace NaBao\Lock\Lock;
+namespace Lock\Lock;
 
-use NaBao\Lock\LockInterface;
-use NaBao\Lock\LockException;
+use Lock\LockInterface;
+use Lock\LockException;
 
 class RedisLock extends LockInterface
 {

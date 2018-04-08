@@ -6,9 +6,9 @@
  * Time: 下午1:37
  */
 
-namespace NaBao\Lock;
+namespace Lock;
 
-use NaBao\Lock\Lock\RedisLock;
+use Lock\Lock\RedisLock;
 
 class Lock
 {

@@ -6,7 +6,7 @@
  * Time: 上午11:50
  */
 
-namespace NaBao\Lock;
+namespace Lock;
 use Predis\Client;
 
 abstract class LockInterface
