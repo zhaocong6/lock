@@ -75,7 +75,7 @@ class Lock
     private function getConfig()
     {
         //判断是否是tp框架
-        if (define('THINK_VERSION')){
+        if (defined('THINK_VERSION')){
             if (!C('lock')) throw new LockException('请先创建配置文件!');
             $this->config = C('lock');
         }
