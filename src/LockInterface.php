@@ -11,6 +11,9 @@ use Predis\Client;
 
 abstract class LockInterface
 {
+    //redis
+    private $redis;
+
     /**
      * 实例化redis 后期版本中增加可配置功能
      * RedisLock constructor.
