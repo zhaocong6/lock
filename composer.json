@@ -16,8 +16,6 @@
         "predis/predis": "^1.1"
     },
     "autoload": {
-        "psr-4": {
-            "NaBao\\Lock\\": "src/"
-        }
+        "psr-4": {"Lock\\": "src/"}
     }
 }
