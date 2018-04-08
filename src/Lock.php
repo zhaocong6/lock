@@ -70,16 +70,23 @@ class Lock
 
     /**
      * 获取配置文件
-     * @throws LockException
+     * @return null
      */
     private function getConfig()
     {
+        $config = null;
         //判断是否是tp框架
         if (defined('THINK_VERSION')){
-            if (!C('lock')) throw new LockException('请先创建配置文件!');
-            $this->config = C('lock');
+            $config = C('lock');
         }
 
-        return $this->config;
+        if (empty($config)){
+            $config = [
+                'drive' =>  'redis',
+                'host'  =>  '127.0.0.1',
+                'port'  =>  '6379'
+            ];
+        }
+        return $this->config = $config;
     }
 }
