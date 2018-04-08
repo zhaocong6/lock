@@ -62,7 +62,7 @@ class Lock
     {
         switch ($this->config['drive']){
             case 'redis':
-                self::$lock = new RedisLock($this->config['host'], $this->config['port']);
+                self::$lock = new RedisLock($this->config['redis']['host'], $this->config['redis']['port']);
                 break;
         }
     }
@@ -82,8 +82,10 @@ class Lock
         if (empty($config)){
             $config = [
                 'drive' =>  'redis',
-                'host'  =>  '127.0.0.1',
-                'port'  =>  '6379'
+                'redis' =>  [
+                    'host'  =>  '127.0.0.1',
+                    'port'  =>  '6379'
+                ]
             ];
         }
         return $this->config = $config;
