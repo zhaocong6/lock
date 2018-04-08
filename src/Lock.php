@@ -57,6 +57,7 @@ class Lock
 
     /**
      * 工厂实例化
+     * @throws LockException
      */
     private function instantiation()
     {
@@ -64,6 +65,8 @@ class Lock
             case 'redis':
                 self::$lock = new RedisLock($this->config['redis']['host'], $this->config['redis']['port']);
                 break;
+            default:
+                throw new LockException('该驱动没有对应的类文件!');
         }
     }
 
