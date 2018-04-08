@@ -16,10 +16,10 @@ class Lock
     private static $lock;
 
     //配置文件
-    private $config;
+    private static $config;
 
     //驱动
-    private $drive;
+    private static $drive;
 
     /**
      * Lock constructor.
@@ -29,22 +29,22 @@ class Lock
      */
     public function __construct($config = [], $params = [])
     {
-        $config = $this->getConfig($config);
+        $config = self::getConfig($config);
 
-        $this->instantiation($config, $params);
+        self::instantiation($config, $params);
     }
 
     /**
      * 静态调用
      * @param $name
      * @param $arguments
+     * @throws LockException
      */
     public static function __callStatic($name, $arguments)
     {
         // TODO: Implement __call() method.
-        if (!(self::$lock instanceof RedisLock)){
-            self::$lock = new RedisLock();
-        }
+        self::getConfig();
+        self::instantiation(self::$config);
         call_user_func_array([self::$lock, $name], $arguments);
     }
 
@@ -60,14 +60,16 @@ class Lock
     }
 
     /**
-     * 工厂实例化
+     * 单例工厂
      * @param $config
      * @param $params
      * @throws LockException
      */
-    private function instantiation($config, $params)
+    private static function instantiation($config = [], $params = [])
     {
-        switch ($this->drive){
+        if (self::$lock) return self::$lock;
+
+        switch (self::$drive){
             case 'redis':
                 self::$lock = new RedisLock($config, $params);
                 break;
@@ -81,29 +83,45 @@ class Lock
      * @param $config
      * @return array
      */
-    private function getConfig($config)
+    private static function getConfig($config = [])
     {
+        if (self::$config) return self::$config;
+
         //判断是否是实例化传值
         if (!empty($config)) {
-            $this->drive = $config['drive'];
-            return $this->config = $config[$this->drive];
+            self::$drive = $config['drive'];
+            return self::$config = $config[self::$drive];
         }
 
         //判断是否是tp框架
         if (defined('THINK_VERSION')){
-            $this->drive  = C('lock')['drive'];
-            $this->config = C('lock')[$this->drive];
+            self::$drive  = C('lock')['drive'];
+            self::$config = C('lock')[self::$drive];
         }
 
         //设置默认参数
-        if (empty($config)){
+        if (empty(self::$config)){
             $config = [
                 'host'  =>  '127.0.0.1',
                 'port'  =>  '6379'
             ];
-            $this->drive = 'redis';
+            self::$drive = 'redis';
         }
 
-        return $this->config = $config;
+        return self::$config = $config;
     }
+
+    /**
+     * 防止实例从外部被克隆
+     *
+     * @return void
+     */
+    private function __clone(){}
+
+    /**
+     * 防止实例从外部反序列化
+     *
+     * @return void
+     */
+    private function __wakeup(){}
 }

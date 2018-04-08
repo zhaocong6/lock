@@ -28,14 +28,14 @@ class RedisLock extends LockInterface
      * @param $config
      * @param $params
      */
-    public function __construct($config, $params = [])
+    public function __construct($config = [], $params = [])
     {
         $this->initRedis($config);
         $this->initParams($params);
     }
 
     /**
-     * 非等待锁 (适用于限制单个用户行为)
+     * 抢占锁 (适用于限制单个用户行为)
      * 此锁不会等待, 第一个锁用户没有处理完成, 第二个用户将被拒绝
      * @param $closure
      * @param $lock_val
@@ -54,7 +54,7 @@ class RedisLock extends LockInterface
     }
 
     /**
-     * 等待锁 (此锁堵塞严重 建议配合异步队列)
+     * 队列锁 (此锁堵塞严重 建议配合异步队列)
      * 此锁会等待, 第一个锁用户没有处理完成, 第二个用户将等待
      * @param $closure
      * @param $lock_val
