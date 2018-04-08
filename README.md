@@ -9,23 +9,29 @@
 
 # 使用
     
+    //或者静态调用
+    <?php
+        
+    use Lock\Lock;
+        
+    $lock_val = 'user:pay:1';
+        
+    Lock::lock(function($redis){
+       echo 'hello world!';
+    }, $lock_val);
+            
+    //实例化调用
     <?php
     
     use Lock\Lock;
-    
-    $config = [
-        'dirve'=>'redis',
-        'redis'=>[
-            'host'=>'127.0.0.1',
-            'port'=>'6379'
-        ]
-    ]
-    $lock = new Lock($config);
+   
+    $lock = new Lock();
     $lock_val = 'user:pay:1';
     
     $lock->lock(function($redis){
         echo 'hello world!';
     }, $lock_val);
+    
 # config配置 (目前兼容tp)
     
      /*
