@@ -12,16 +12,23 @@ use Lock\Lock\RedisLock;
 
 class Lock
 {
+    //实例化lock类
     private static $lock;
+
+    //配置文件
+    private $config;
 
     /**
      * Lock constructor.
      * @param string $host
      * @param string $port
+     * @throws LockException
      */
     public function __construct($host = '127.0.0.1', $port = '6379')
     {
-        self::$lock = new RedisLock($host = '127.0.0.1', $port = '6379');
+        $this->getConfig();
+
+        $this->instantiation();
     }
 
     /**
@@ -32,8 +39,10 @@ class Lock
     public static function __callStatic($name, $arguments)
     {
         // TODO: Implement __call() method.
-        $self = self::instantiation();
-        call_user_func_array([$self, $name], $arguments);
+        if (!(self::$lock instanceof RedisLock)){
+            self::$lock = new RedisLock();
+        }
+        call_user_func_array([self::$lock, $name], $arguments);
     }
 
     /**
@@ -48,14 +57,29 @@ class Lock
     }
 
     /**
-     * 实例化自身
-     * @return RedisLock
+     * 工厂实例化
      */
-    private static function instantiation()
+    private function instantiation()
     {
-        if (!(self::$lock instanceof RedisLock)){
-            self::$lock = new RedisLock();
+        switch ($this->config['drive']){
+            case 'redis':
+                self::$lock = new RedisLock($this->config['host'], $this->config['port']);
+                break;
         }
-        return self::$lock;
+    }
+
+    /**
+     * 获取配置文件
+     * @throws LockException
+     */
+    private function getConfig()
+    {
+        //判断是否是tp框架
+        if (define('THINK_VERSION')){
+            if (!C('lock')) throw new LockException('请先创建配置文件!');
+            $this->config = C('lock');
+        }
+
+        return $this->config;
     }
 }

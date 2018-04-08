@@ -17,9 +17,6 @@ class RedisLock extends LockInterface
     //缓存redis
     private $redis;
 
-    //实例化容器
-    private static $self;
-
     //等待计数
     private $loop_num = 0;
 
