@@ -16,10 +16,12 @@ class Lock
 
     /**
      * Lock constructor.
+     * @param string $host
+     * @param string $port
      */
-    public function __construct()
+    public function __construct($host = '127.0.0.1', $port = '6379')
     {
-        self::$lock = new RedisLock();
+        self::$lock = new RedisLock($host = '127.0.0.1', $port = '6379');
     }
 
     /**

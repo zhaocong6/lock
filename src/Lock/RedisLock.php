@@ -10,6 +10,7 @@ namespace Lock\Lock;
 
 use Lock\LockInterface;
 use Lock\LockException;
+use Predis\Client;
 
 class RedisLock extends LockInterface
 {
@@ -33,7 +34,10 @@ class RedisLock extends LockInterface
      */
     public function __construct($host = '127.0.0.1', $port = '6379')
     {
-        parent::__construct();
+        $this->redis = new Client([
+            'host'   => $host,
+            'port'   => $port,
+        ]);
     }
 
     /**
@@ -44,7 +48,7 @@ class RedisLock extends LockInterface
      * @param int $expiration  默认单个任务最大执行时间 60s
      * @throws \Exception
      */
-    private function lock($closure, $lock_val, $expiration = 60)
+    public function lock($closure, $lock_val, $expiration = 60)
     {
         if ( $this->redis->set($lock_val, true, 'nx', 'ex', $expiration) ) {
             $closure($this->redis);
@@ -72,7 +76,7 @@ class RedisLock extends LockInterface
      * @throws \Exception
      */
 
-    private function waitLock($closure, $lock_val, $expiration = 60, $wait_time = 20000)
+    public function waitLock($closure, $lock_val, $expiration = 60, $wait_time = 20000)
     {
         loop:
         if ($this->loop_num > $this->loop_num_limit) { throw new \Exception('等待超时!');};
@@ -89,40 +93,5 @@ class RedisLock extends LockInterface
             $this->loop_num++;
             goto loop;
         }
-    }
-
-    /**
-     * 静态调用
-     * @param $name
-     * @param $arguments
-     */
-    public static function __callStatic($name, $arguments)
-    {
-        // TODO: Implement __call() method.
-        $self = self::instantiation();
-        call_user_func_array([$self, $name], $arguments);
-    }
-
-    /**
-     * 实例化调用
-     * @param $name
-     * @param $arguments
-     */
-    public function __call($name, $arguments)
-    {
-        // TODO: Implement __call() method.
-        call_user_func_array([$this, $name], $arguments);
-    }
-
-    /**
-     * 实例化自身
-     * @return RedisLock
-     */
-    private static function instantiation()
-    {
-        if (!(self::$self instanceof RedisLock)){
-            self::$self = new RedisLock();
-        }
-        return self::$self;
     }
 }

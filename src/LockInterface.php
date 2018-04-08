@@ -7,26 +7,9 @@
  */
 
 namespace Lock;
-use Predis\Client;
 
 abstract class LockInterface
 {
-    //redis
-    private $redis;
-
-    /**
-     * 实例化redis 后期版本中增加可配置功能
-     * RedisLock constructor.
-     * @param $host
-     * @param $port
-     */
-    public function __construct($host = '127.0.0.1', $port = '6379')
-    {
-        $this->redis = new Client([
-            'host'   => $host,
-            'port'   => $port,
-        ]);
-    }
 
     /**
      * 非等待锁 (适用于限制单个用户行为)
@@ -36,7 +19,7 @@ abstract class LockInterface
      * @param int $expiration  默认单个任务最大执行时间 60s
      * @throws \Exception
      */
-    private function lock($closure, $lock_val, $expiration = 60){}
+    public function lock($closure, $lock_val, $expiration = 60){}
 
     /**
      * 等待锁 (此锁堵塞严重 建议配合异步队列)
@@ -51,34 +34,5 @@ abstract class LockInterface
      * @param int $wait_time   默认等待周期0.02s
      * @throws \Exception
      */
-    private function waitLock($closure, $lock_val, $expiration = 60, $wait_time = 20000){}
-
-    /**
-     * 静态调用
-     * @param $name
-     * @param $arguments
-     */
-    public static function __callStatic($name, $arguments)
-    {
-        // TODO: Implement __call() method.
-        $self = self::instantiation();
-        call_user_func_array([$self, $name], $arguments);
-    }
-
-    /**
-     * 实例化调用
-     * @param $name
-     * @param $arguments
-     */
-    public function __call($name, $arguments)
-    {
-        // TODO: Implement __call() method.
-        call_user_func_array([$this, $name], $arguments);
-    }
-
-    /**
-     * 实例化自身
-     * @return self
-     */
-    private static function instantiation(){}
+    public function waitLock($closure, $lock_val, $expiration = 60, $wait_time = 20000){}
 }
