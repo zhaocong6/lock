@@ -16,6 +16,9 @@
         "predis/predis": "^1.1"
     },
     "autoload": {
-        "psr-4": {"Lock\\": "src/"}
+        "psr-4": {
+          "Lock\\": "src/",
+          "Lock\\Lock": "src/Lock"
+        }
     }
 }
