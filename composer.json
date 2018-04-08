@@ -1,6 +1,6 @@
 {
     "name": "nabao/lock",
-    "description": "并发锁",
+    "description": "并发抢占锁, 队列锁",
     "license": "MIT",
     "type": "library",
     "minimum-stability": "dev",
