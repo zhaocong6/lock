@@ -17,24 +17,21 @@ class RedisLock extends LockInterface
     //缓存redis
     private $redis;
 
-    //等待计数
-    private $loop_num = 0;
+    //最大同时等待锁的 进程数量
+    private $max_wait_process = 50;
 
-    //最大等待次数
-    private $loop_num_limit = 20;
+    //等待进程名称
+    private $wait_lock_process_name;
 
     /**
-     * 实例化redis 后期版本中增加可配置功能
      * RedisLock constructor.
-     * @param $host
-     * @param $port
+     * @param $config
+     * @param $params
      */
-    public function __construct($host = '127.0.0.1', $port = '6379')
+    public function __construct($config, $params = [])
     {
-        $this->redis = new Client([
-            'host'   => $host,
-            'port'   => $port,
-        ]);
+        $this->initRedis($config);
+        $this->initParams($params);
     }
 
     /**
@@ -50,10 +47,7 @@ class RedisLock extends LockInterface
         if ( $this->redis->set($lock_val, true, 'nx', 'ex', $expiration) ) {
             $closure($this->redis);
 
-            $this->redis->watch($lock_val);
-            $this->redis->multi();
-            $this->redis->del($lock_val);
-            $this->redis->exec();
+            $this->delLock($lock_val);
         }else{
             throw new LockException('操作频繁, 被服务器拒绝!');
         }
@@ -62,10 +56,6 @@ class RedisLock extends LockInterface
     /**
      * 等待锁 (此锁堵塞严重 建议配合异步队列)
      * 此锁会等待, 第一个锁用户没有处理完成, 第二个用户将等待
-     *
-     * 待解决问题:
-     *          限制等待用户数量, 防止用户过多造成内存过高
-     *
      * @param $closure
      * @param $lock_val
      * @param int $expiration  默认单个任务最大执行时间 60s
@@ -75,20 +65,102 @@ class RedisLock extends LockInterface
 
     public function waitLock($closure, $lock_val, $expiration = 60, $wait_time = 20000)
     {
-        loop:
-        if ($this->loop_num > $this->loop_num_limit) { throw new \Exception('等待超时!');};
+        $this->initWaitLockProcess($lock_val);
 
+        $this->addWaitLockProcess();
+
+        loop:
         if ( $this->redis->set($lock_val, true, 'nx', 'ex', $expiration) ) {
             $closure($this->redis);
 
-            $this->redis->watch($lock_val);
-            $this->redis->multi();
-            $this->redis->del($lock_val);
-            $this->redis->exec();
+            $this->delWaitLockProcess();
+
+            $this->delLock($lock_val);
         }else{
             usleep($wait_time);
-            $this->loop_num++;
             goto loop;
+        }
+    }
+
+    /**
+     * 设置等待进程名称
+     * @param $lock_val
+     * @return string
+     */
+    private function setWaitLockProcessName($lock_val)
+    {
+        return $this->wait_lock_process_name = 'waitLock:process:'.$lock_val;
+    }
+
+    /**
+     * 初始化等待锁的进程数量
+     * @param $lock_val
+     */
+    private function initWaitLockProcess($lock_val)
+    {
+        $wait_lock_process_name = $this->setWaitLockProcessName($lock_val);
+
+        $this->redis->setnx($wait_lock_process_name, 0);
+    }
+
+    /**
+     * 新增等待进程
+     * @throws \Exception
+     */
+    private function addWaitLockProcess()
+    {
+        $current_wait_process = $this->redis->get($this->wait_lock_process_name);
+
+        if ($current_wait_process >= $this->max_wait_process){
+            throw new LockException('操作频繁, 被服务器拒绝!');
+        }else{
+            $this->redis->incr($this->wait_lock_process_name);
+            $this->redis->expire($this->wait_lock_process_name, 120);
+        }
+    }
+
+    /**
+     * 删除当前等待进程
+     */
+    private function delWaitLockProcess()
+    {
+        $this->redis->decr($this->wait_lock_process_name);
+    }
+
+    /**
+     * 删除锁
+     * @param $lock_val
+     */
+    private function delLock($lock_val)
+    {
+        $this->redis->watch($lock_val);
+        $this->redis->multi();
+        $this->redis->del($lock_val);
+        $this->redis->exec();
+    }
+
+    /**
+     * 初始化redis
+     * @param $config
+     */
+    private function initRedis($config)
+    {
+        $this->redis = new Client([
+            'host'   => $config['host'] ? $config['host'] : '127.0.0.1',
+            'port'   => $config['port'] ? $config['port'] : '6379'
+        ]);
+    }
+
+    /**
+     * 初始化参数
+     * @param $params
+     */
+    private function initParams($params)
+    {
+        if (!empty($params)){
+            foreach ($params as $key => $item){
+                $this->$key = $item;
+            }
         }
     }
 }

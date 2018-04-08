@@ -63,7 +63,7 @@ class Lock
     {
         switch ($this->config['drive']){
             case 'redis':
-                self::$lock = new RedisLock($this->config['redis']['host'], $this->config['redis']['port']);
+                self::$lock = new RedisLock($this->config['redis']);
                 break;
             default:
                 throw new LockException('该驱动没有对应的类文件!');
