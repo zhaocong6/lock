@@ -18,7 +18,7 @@ class RedisLock extends LockInterface
     private $redis;
 
     //队列锁最大进程进程数量
-    private $max_wait_process = 50;
+    private $max_queue_process = 50;
 
     //进程名称
     private $queue_lock_process_name;
@@ -109,9 +109,9 @@ class RedisLock extends LockInterface
      */
     private function addQueueLockProcess()
     {
-        $current_wait_process = $this->redis->get($this->queue_lock_process_name);
+        $current_queue_process = $this->redis->get($this->queue_lock_process_name);
 
-        if ($current_wait_process >= $this->max_wait_process){
+        if ($current_queue_process >= $this->max_queue_process){
             throw new LockException('操作频繁, 被服务器拒绝!');
         }else{
             $this->redis->incr($this->queue_lock_process_name);
