@@ -18,16 +18,20 @@ class Lock
     //配置文件
     private $config;
 
+    //驱动
+    private $drive;
+
     /**
      * Lock constructor.
-     * @param string $host
-     * @param string $port
+     * @param array $config
+     * @param array $params
+     * @throws LockException
      */
-    public function __construct($host = '127.0.0.1', $port = '6379')
+    public function __construct($config = [], $params = [])
     {
-        $this->getConfig();
+        $config = $this->getConfig($config);
 
-        $this->instantiation();
+        $this->instantiation($config, $params);
     }
 
     /**
@@ -57,13 +61,15 @@ class Lock
 
     /**
      * 工厂实例化
+     * @param $config
+     * @param $params
      * @throws LockException
      */
-    private function instantiation()
+    private function instantiation($config, $params)
     {
-        switch ($this->config['drive']){
+        switch ($this->drive){
             case 'redis':
-                self::$lock = new RedisLock($this->config['redis']);
+                self::$lock = new RedisLock($config, $params);
                 break;
             default:
                 throw new LockException('该驱动没有对应的类文件!');
@@ -72,25 +78,32 @@ class Lock
 
     /**
      * 获取配置文件
-     * @return null
+     * @param $config
+     * @return array
      */
-    private function getConfig()
+    private function getConfig($config)
     {
-        $config = null;
-        //判断是否是tp框架
-        if (defined('THINK_VERSION')){
-            $config = C('lock');
+        //判断是否是实例化传值
+        if (!empty($config)) {
+            $this->drive = $config['drive'];
+            return $this->config = $config[$this->drive];
         }
 
+        //判断是否是tp框架
+        if (defined('THINK_VERSION')){
+            $this->drive  = C('lock')['drive'];
+            $this->config = C('lock')[$this->drive];
+        }
+
+        //设置默认参数
         if (empty($config)){
             $config = [
-                'drive' =>  'redis',
-                'redis' =>  [
-                    'host'  =>  '127.0.0.1',
-                    'port'  =>  '6379'
-                ]
+                'host'  =>  '127.0.0.1',
+                'port'  =>  '6379'
             ];
+            $this->drive = 'redis';
         }
+
         return $this->config = $config;
     }
 }
