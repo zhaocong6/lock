@@ -22,7 +22,6 @@ class Lock
      * Lock constructor.
      * @param string $host
      * @param string $port
-     * @throws LockException
      */
     public function __construct($host = '127.0.0.1', $port = '6379')
     {
