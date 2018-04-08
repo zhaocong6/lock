@@ -1,6 +1,6 @@
 {
-    "name": "NaBao/lock",
-    "description": "jwt",
+    "name": "nabao/lock",
+    "description": "并发锁",
     "license": "MIT",
     "type": "library",
     "minimum-stability": "dev",
