@@ -2,21 +2,28 @@
     
     1.PHP >= 5.6
     2.composer
-    3.predis
+    3.redis
+    4.predis
     
 # composer 安装
 
 移步 [composer中文网](https://www.phpcomposer.com/).
 # redis 安装
-移步 [redis中文网](http://www.redis.net.cn/)
+redis不支持window平台, window平台下的redis服务器由微软团队维护,版本一般比较旧.
+一些redis新数据结构和功能会有限制,建议window用户安装linux虚拟机
+
+linux移步 [redis中文网](http://www.redis.net.cn/)
+
+window [github redis window](https://github.com/dmajkic/redis/downloads)
 # predis 安装
     composer require predis/predis
-# 安装     
+#lock 安装     
     composer require nabao/lock
 
 # 使用
     
-    //或者静态调用
+    //静态调用
+    //不需要实例化,使用方便.配置
     <?php
         
     use Lock\Lock;
