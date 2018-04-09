@@ -4,6 +4,9 @@
     2.composer
     3.predis
     
+# composer 安装
+
+移步 [composer中文网](https://www.phpcomposer.com/).
 # 安装     
     composer require nabao/lock
 
