@@ -17,7 +17,7 @@ linux移步 [redis中文网](http://www.redis.net.cn/)
 window [github redis window](https://github.com/dmajkic/redis/downloads)
 # predis 安装
     composer require predis/predis
-#lock 安装     
+# lock 安装     
     composer require nabao/lock
 
 # 使用
