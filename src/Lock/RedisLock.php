@@ -59,11 +59,12 @@ class RedisLock extends LockInterface
      * @param $closure
      * @param $lock_val
      * @param int $expiration  默认单个任务最大执行时间 60s
+     * @param int $max_queue_process   最大进程数
      * @param int $wait_time   默认等待周期0.02s
      * @throws \Exception
      */
 
-    public function queueLock($closure, $lock_val, $expiration = 60, $wait_time = 20000)
+    public function queueLock($closure, $lock_val, $expiration = 60, $max_queue_process = 50, $wait_time = 20000)
     {
         $this->initQueueLockProcess($lock_val);
 

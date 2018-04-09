@@ -59,6 +59,10 @@ window [github redis window](https://github.com/dmajkic/redis/downloads)
         |redis redis驱动配置
         |   host 地址
         |   port 端口
+        |
+        |params 参数配置
+        |   max_queue_process  进程池最大进程
+        |
         */
     return [
         'lock'=>[
@@ -66,6 +70,9 @@ window [github redis window](https://github.com/dmajkic/redis/downloads)
                 'redis' =>  [
                     'host'  =>  '127.0.0.1',
                     'port'  =>  '6379'
+                ],
+                'params' => [
+                    'max_queue_process' => 100
                 ]
             ]
         ]

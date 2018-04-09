@@ -18,6 +18,9 @@ class Lock
     //配置文件
     private static $config;
 
+    //参数文件
+    private static $params;
+
     //驱动
     private static $drive;
 
@@ -30,6 +33,7 @@ class Lock
     public function __construct($config = [], $params = [])
     {
         $config = self::getConfig($config);
+        $params = self::getParams($params);
 
         self::instantiation($config, $params);
     }
@@ -109,6 +113,27 @@ class Lock
         }
 
         return self::$config = $config;
+    }
+
+    /**
+     * @param array $params
+     * @return array
+     */
+    private function getParams($params = [])
+    {
+        if (self::$params) return self::$params;
+
+        //判断是否是实例化传值
+        if (!empty($params)) {
+            return self::$params = $params;
+        }
+
+        //判断是否是tp框架
+        if (defined('THINK_VERSION')){
+            self::$params  = C('lock')['params'];
+        }
+
+        return self::$params = $params;
     }
 
     /**
