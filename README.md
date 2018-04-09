@@ -48,6 +48,7 @@ window [github redis window](https://github.com/dmajkic/redis/downloads)
     
 # config配置
 ##目前兼容tp.其它框架请实例化传参
+
      /*
         |--------------------------------------------------------------------------
         | lock配置文件
