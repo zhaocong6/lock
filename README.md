@@ -7,6 +7,10 @@
 # composer 安装
 
 移步 [composer中文网](https://www.phpcomposer.com/).
+# redis 安装
+移步 [redis中文网](http://www.redis.net.cn/)
+# predis 安装
+    composer require predis/predis
 # 安装     
     composer require nabao/lock
 
