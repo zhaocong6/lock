@@ -147,8 +147,9 @@ class RedisLock extends LockInterface
     private function initRedis($config)
     {
         $this->redis = new Client([
-            'host'   => $config['host'] ? $config['host'] : '127.0.0.1',
-            'port'   => $config['port'] ? $config['port'] : '6379'
+            'host'       => $config['host'] ? $config['host'] : '127.0.0.1',
+            'port'       => $config['port'] ? $config['port'] : '6379',
+            'password'   => $config['password'] ? $config['password'] : ''
         ]);
     }
 
