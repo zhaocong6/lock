@@ -46,8 +46,8 @@ window [github redis window](https://github.com/dmajkic/redis/downloads)
         echo 'hello world!';
     }, $lock_val);
     
-# config配置 (目前兼容tp)
-    
+# config配置
+##目前兼容tp, laravel待兼容(请实例化传参)
      /*
         |--------------------------------------------------------------------------
         | lock配置文件
