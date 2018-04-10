@@ -75,7 +75,7 @@ class RedisLock extends LockInterface
      * @param $lock_val
      * @param int $expiration  默认单个任务最大执行时间 60s
      * @param int $max_queue_process   最大进程数
-     * @param int $wait_time   默认等待周期0.05s  该参数根据业务而定
+     * @param int $wait_time   默认等待周期0.02s  该参数根据业务而定
      *                                          1/0.005=200(1秒最多200个并发)
      *                                          1/0.02=100(1秒最多50个并发)
      * @throws \Exception
