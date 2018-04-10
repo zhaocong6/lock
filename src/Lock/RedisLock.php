@@ -18,7 +18,7 @@ class RedisLock extends LockInterface
     private $redis;
 
     //队列锁最大进程进程数量
-    private $max_queue_process = 50;
+    private $max_queue_process = 100;
 
     //进程名称
     private $queue_lock_process_name;
@@ -71,11 +71,11 @@ class RedisLock extends LockInterface
      * @param $lock_val
      * @param int $expiration  默认单个任务最大执行时间 60s
      * @param int $max_queue_process   最大进程数
-     * @param int $wait_time   默认等待周期0.02s
+     * @param int $wait_time   默认等待周期0.05s
      * @throws \Exception
      */
 
-    public function queueLock($closure, $lock_val, $expiration = 60, $max_queue_process = 50, $wait_time = 20000)
+    public function queueLock($closure, $lock_val, $expiration = 60, $max_queue_process = 100, $wait_time = 50000)
     {
         $this->lock_val = $lock_val;
 
@@ -182,6 +182,7 @@ class RedisLock extends LockInterface
 
     /**
      * 删除锁
+     * 防止程序中止后没解锁
      */
     public function __destruct()
     {
