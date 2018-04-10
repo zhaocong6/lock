@@ -32,6 +32,9 @@ class RedisLock extends LockInterface
     //是否删除锁
     private $is_del_lock = true;
 
+    //随机数
+    private $rand_num;
+
     /**
      * RedisLock constructor.
      * @param $config
@@ -55,7 +58,7 @@ class RedisLock extends LockInterface
     {
         $this->lock_val = $lock_val;
 
-        if ( $this->redis->set($this->lock_val, true, 'nx', 'ex', $expiration) ) {
+        if ( $this->redis->set($this->lock_val, $this->rand_num, 'nx', 'ex', $expiration) ) {
             $closure($this->redis);
 
             $this->delLock();
@@ -84,7 +87,7 @@ class RedisLock extends LockInterface
         $this->addQueueLockProcess();
 
         loop:
-        if ( $this->redis->set($this->lock_val, true, 'nx', 'ex', $expiration) ) {
+        if ( $this->redis->set($this->lock_val, $this->rand_num, 'nx', 'ex', $expiration) ) {
             $closure($this->redis);
 
             $this->delQueueLockProcess();
@@ -149,13 +152,19 @@ class RedisLock extends LockInterface
     private function delLock()
     {
         if ($this->is_del_lock){
-            $this->redis->watch($this->lock_val);
-            $this->redis->multi();
-            $this->redis->del($this->lock_val);
-            $this->redis->exec();
-
+            if ($this->rand_num == $this->redis->get($this->lock_val)){
+                $this->redis->del($this->lock_val);
+            }
             $this->is_del_lock = false;
         }
+    }
+
+    /**
+     * 生成随机函数
+     */
+    private function randNum()
+    {
+        $this->rand_num = uniqid() . mt_rand(1, 1000000);
     }
 
     /**
