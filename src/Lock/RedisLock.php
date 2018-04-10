@@ -23,6 +23,15 @@ class RedisLock extends LockInterface
     //进程名称
     private $queue_lock_process_name;
 
+    //锁值
+    private $lock_val;
+
+    //是否删除等待锁进程
+    private $is_del_queue_lock_process = true;
+
+    //是否删除锁
+    private $is_del_lock = true;
+
     /**
      * RedisLock constructor.
      * @param $config
@@ -44,10 +53,12 @@ class RedisLock extends LockInterface
      */
     public function lock($closure, $lock_val, $expiration = 60)
     {
-        if ( $this->redis->set($lock_val, true, 'nx', 'ex', $expiration) ) {
+        $this->lock_val = $lock_val;
+
+        if ( $this->redis->set($this->lock_val, true, 'nx', 'ex', $expiration) ) {
             $closure($this->redis);
 
-            $this->delLock($lock_val);
+            $this->delLock();
         }else{
             throw new LockException('操作频繁, 被服务器拒绝!');
         }
@@ -66,17 +77,19 @@ class RedisLock extends LockInterface
 
     public function queueLock($closure, $lock_val, $expiration = 60, $max_queue_process = 50, $wait_time = 20000)
     {
-        $this->initQueueLockProcess($lock_val);
+        $this->lock_val = $lock_val;
+
+        $this->initQueueLockProcess();
 
         $this->addQueueLockProcess();
 
         loop:
-        if ( $this->redis->set($lock_val, true, 'nx', 'ex', $expiration) ) {
+        if ( $this->redis->set($this->lock_val, true, 'nx', 'ex', $expiration) ) {
             $closure($this->redis);
 
             $this->delQueueLockProcess();
 
-            $this->delLock($lock_val);
+            $this->delLock();
         }else{
             usleep($wait_time);
             goto loop;
@@ -85,21 +98,19 @@ class RedisLock extends LockInterface
 
     /**
      * 设置等待进程名称
-     * @param $lock_val
      * @return string
      */
-    private function setQueueLockProcessName($lock_val)
+    private function setQueueLockProcessName()
     {
-        return $this->queue_lock_process_name = 'queueLock:process:'.$lock_val;
+        return $this->queue_lock_process_name = 'queueLock:process:'.$this->lock_val;
     }
 
     /**
      * 初始化等待锁的进程数量
-     * @param $lock_val
      */
-    private function initQueueLockProcess($lock_val)
+    private function initQueueLockProcess()
     {
-        $queue_lock_process_name = $this->setQueueLockProcessName($lock_val);
+        $queue_lock_process_name = $this->setQueueLockProcessName();
 
         $this->redis->setnx($queue_lock_process_name, 0);
     }
@@ -125,19 +136,26 @@ class RedisLock extends LockInterface
      */
     private function delQueueLockProcess()
     {
-        $this->redis->decr($this->queue_lock_process_name);
+        if ($this->is_del_queue_lock_process){
+            $this->redis->decr($this->queue_lock_process_name);
+
+            $this->is_del_queue_lock_process = false;
+        }
     }
 
     /**
      * 删除锁
-     * @param $lock_val
      */
-    private function delLock($lock_val)
+    private function delLock()
     {
-        $this->redis->watch($lock_val);
-        $this->redis->multi();
-        $this->redis->del($lock_val);
-        $this->redis->exec();
+        if ($this->is_del_lock){
+            $this->redis->watch($this->lock_val);
+            $this->redis->multi();
+            $this->redis->del($this->lock_val);
+            $this->redis->exec();
+
+            $this->is_del_lock = false;
+        }
     }
 
     /**
@@ -160,5 +178,15 @@ class RedisLock extends LockInterface
                 $this->$key = $item;
             }
         }
+    }
+
+    /**
+     * 删除锁
+     */
+    public function __destruct()
+    {
+        // TODO: Implement __destruct() method.
+        $this->delQueueLockProcess();
+        $this->delLock();
     }
 }
