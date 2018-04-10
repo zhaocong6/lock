@@ -44,6 +44,7 @@ class RedisLock extends LockInterface
     {
         $this->initRedis($config);
         $this->initParams($params);
+        $this->randNum();
     }
 
     /**
