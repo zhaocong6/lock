@@ -44,7 +44,6 @@ class RedisLock extends LockInterface
     {
         $this->initRedis($config);
         $this->initParams($params);
-        $this->randNum();
     }
 
     /**
@@ -58,6 +57,7 @@ class RedisLock extends LockInterface
     public function lock($closure, $lock_val, $expiration = 60)
     {
         $this->lock_val = $lock_val;
+        $this->randNum();
 
         if ( $this->redis->set($this->lock_val, $this->rand_num, 'nx', 'ex', $expiration) ) {
             $closure($this->redis);
@@ -84,6 +84,7 @@ class RedisLock extends LockInterface
     public function queueLock($closure, $lock_val, $expiration = 60, $max_queue_process = 100, $wait_time = 20000)
     {
         $this->lock_val = $lock_val;
+        $this->randNum();
 
         $this->initQueueLockProcess();
 
