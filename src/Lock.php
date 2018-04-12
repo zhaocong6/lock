@@ -112,7 +112,7 @@ class Lock
             self::$drive = 'redis';
         }
 
-        return self::$config = $config;
+        return self::$config;
     }
 
     /**
