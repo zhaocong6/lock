@@ -133,7 +133,7 @@ class Lock
             self::$params  = C('lock')['params'];
         }
 
-        return self::$params = $params;
+        return self::$params;
     }
 
     /**
