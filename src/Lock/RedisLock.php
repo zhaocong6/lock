@@ -23,6 +23,9 @@ class RedisLock extends LockInterface
     //进程名称
     private $queue_lock_process_name;
 
+    //等待list名称
+    private $queue_lock_list_name;
+
     //锁值
     private $lock_val;
 
@@ -75,30 +78,30 @@ class RedisLock extends LockInterface
      * @param $lock_val
      * @param int $expiration  默认单个任务最大执行时间 60s
      * @param int $max_queue_process   最大进程数
-     * @param int $wait_time   默认等待周期0.02s  该参数根据业务而定
-     *                                          1/0.005=200(1秒最多200个并发)
-     *                                          1/0.02=100(1秒最多50个并发)
      * @throws \Exception
      */
 
-    public function queueLock($closure, $lock_val, $expiration = 60, $max_queue_process = 100, $wait_time = 20000)
+    public function queueLock($closure, $lock_val, $expiration = 60, $max_queue_process = 100)
     {
         $this->lock_val = $lock_val;
         $this->randNum();
 
         $this->initQueueLockProcess();
-
+        $this->initQueueLockList();
         $this->addQueueLockProcess();
 
         loop:
+        $this->redis->blpop($this->queue_lock_list_name, $expiration);
+
         if ( $this->redis->set($this->lock_val, $this->rand_num, 'nx', 'ex', $expiration) ) {
             $closure($this->redis);
 
             $this->delQueueLockProcess();
 
             $this->delLock();
+
+            $this->addQueueLockList();
         }else{
-            usleep($wait_time);
             goto loop;
         }
     }
@@ -113,6 +116,15 @@ class RedisLock extends LockInterface
     }
 
     /**
+     * 设置等待队列
+     * @return string
+     */
+    private function setQueueLockListName()
+    {
+        return $this->queue_lock_list_name = 'lock:list:'.$this->queue_lock_process_name;
+    }
+
+    /**
      * 初始化等待锁的进程数量
      */
     private function initQueueLockProcess()
@@ -120,6 +132,19 @@ class RedisLock extends LockInterface
         $queue_lock_process_name = $this->setQueueLockProcessName();
 
         $this->redis->setnx($queue_lock_process_name, 0);
+    }
+
+    /**
+     * 初始化lock list
+     */
+    private function initQueueLockList()
+    {
+        $one_queue = $this->redis->get($this->queue_lock_process_name);
+
+        $queue_lock_list_name = $this->setQueueLockListName();
+        if ($one_queue == 0 && $this->redis->llen($queue_lock_list_name) == 0){
+            $this->addQueueLockList();
+        }
     }
 
     /**
@@ -136,6 +161,15 @@ class RedisLock extends LockInterface
             $this->redis->incr($this->queue_lock_process_name);
             $this->redis->expire($this->queue_lock_process_name, 120);
         }
+    }
+
+    /**
+     * 新增等待队列list
+     */
+    private function addQueueLockList()
+    {
+        $this->redis->lpush($this->queue_lock_list_name, true);
+        $this->redis->expire($this->queue_lock_list_name, 180);
     }
 
     /**

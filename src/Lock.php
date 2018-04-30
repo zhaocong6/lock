@@ -105,7 +105,7 @@ class Lock
 
         //设置默认参数
         if (empty(self::$config)){
-            $config = [
+            self::$config = [
                 'host'  =>  '127.0.0.1',
                 'port'  =>  '6379'
             ];
