@@ -8,7 +8,7 @@
 
 namespace Lock;
 
-abstract class LockInterface
+interface LockInterface
 {
 
     /**
@@ -19,16 +19,16 @@ abstract class LockInterface
      * @param int $expiration  默认单个任务最大执行时间 60s
      * @throws \Exception
      */
-    public function lock($closure, $lock_val, $expiration = 60){}
+    public function lock($closure, $lock_val, $expiration = 60);
 
     /**
-     * 队列锁 (此锁堵塞严重 建议配合异步队列)
+     * 队列锁
      * 此锁会等待, 第一个锁用户没有处理完成, 第二个用户将等待
      * @param $closure
      * @param $lock_val
      * @param int $expiration  默认单个任务最大执行时间 60s
-     * @param int $wait_time   默认等待周期0.02s
+     * @param int $max_queue_process   最大等待进程数
      * @throws \Exception
      */
-    public function queueLock($closure, $lock_val, $expiration = 60, $wait_time = 20000){}
+    public function queueLock($closure, $lock_val, $expiration = 60, $max_queue_process = 100);
 }

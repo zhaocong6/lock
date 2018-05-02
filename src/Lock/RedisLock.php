@@ -12,7 +12,7 @@ use Lock\LockInterface;
 use Lock\LockException;
 use Predis\Client;
 
-class RedisLock extends LockInterface
+class RedisLock implements LockInterface
 {
     //缓存redis
     private $redis;
@@ -77,7 +77,7 @@ class RedisLock extends LockInterface
      * @param $closure
      * @param $lock_val
      * @param int $expiration  默认单个任务最大执行时间 60s
-     * @param int $max_queue_process   最大进程数
+     * @param int $max_queue_process   最大等待进程数
      * @throws \Exception
      */
 
