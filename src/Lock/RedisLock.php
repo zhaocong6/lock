@@ -80,14 +80,14 @@ class RedisLock implements LockInterface
      * @param int $expiration  默认单个任务最大执行时间 60s
      * @throws \Exception
      */
-    public function queueLock($closure, $lock_val, $max_queue_process = 100, $expiration = 60)
+    public function queueLock($closure, $lock_val, $max_queue_process = null, $expiration = 60)
     {
         $this->lock_val = $lock_val;
         $this->randNum();
 
         $this->initQueueLockProcess();
         $this->initQueueLockList();
-        $this->addQueueLockProcess();
+        $this->addQueueLockProcess($max_queue_process);
 
         loop:
         $this->redis->blpop($this->queue_lock_list_name, $expiration);
@@ -148,10 +148,13 @@ class RedisLock implements LockInterface
 
     /**
      * 新增等待进程
-     * @throws \Exception
+     * @param $max_queue_process
+     * @throws LockException
      */
-    private function addQueueLockProcess()
+    private function addQueueLockProcess($max_queue_process)
     {
+        if (!is_null($max_queue_process)) $this->max_queue_process = $max_queue_process;
+
         $current_queue_process = $this->redis->get($this->queue_lock_process_name);
 
         if ($current_queue_process >= $this->max_queue_process){
