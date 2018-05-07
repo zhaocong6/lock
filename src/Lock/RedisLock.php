@@ -72,16 +72,15 @@ class RedisLock implements LockInterface
     }
 
     /**
-     * 队列锁 (此锁堵塞严重 建议配合异步队列)
+     * 队列锁
      * 此锁会等待, 第一个锁用户没有处理完成, 第二个用户将等待
      * @param $closure
      * @param $lock_val
-     * @param int $expiration  默认单个任务最大执行时间 60s
      * @param int $max_queue_process   最大等待进程数
+     * @param int $expiration  默认单个任务最大执行时间 60s
      * @throws \Exception
      */
-
-    public function queueLock($closure, $lock_val, $expiration = 60, $max_queue_process = 100)
+    public function queueLock($closure, $lock_val, $max_queue_process = 100, $expiration = 60)
     {
         $this->lock_val = $lock_val;
         $this->randNum();
