@@ -35,7 +35,7 @@ class Lock
         $config = self::getConfig($config);
         $params = self::getParams($params);
 
-        self::instantiation($config, $params);
+        self::manyInstantiation($config, $params);
     }
 
     /**
@@ -48,7 +48,7 @@ class Lock
     {
         // TODO: Implement __call() method.
         self::getConfig();
-        self::instantiation(self::$config);
+        self::singleInstantiation(self::$config);
         call_user_func_array([self::$lock, $name], $arguments);
     }
 
@@ -69,7 +69,7 @@ class Lock
      * @param $params
      * @throws LockException
      */
-    private static function instantiation($config = [], $params = [])
+    private static function singleInstantiation($config = [], $params = [])
     {
         if (self::$lock) return self::$lock;
 
@@ -80,6 +80,27 @@ class Lock
             default:
                 throw new LockException('该驱动没有对应的类文件!');
         }
+    }
+
+    /**
+     * 多例工厂
+     * @param array $config
+     * @param array $params
+     * @return RedisLock|null
+     * @throws LockException
+     */
+    private static function manyInstantiation($config = [], $params = [])
+    {
+        $lock = null;
+        switch (self::$drive){
+            case 'redis':
+                $lock = new RedisLock($config, $params);
+                break;
+            default:
+                throw new LockException('该驱动没有对应的类文件!');
+        }
+
+        return $lock;
     }
 
     /**
