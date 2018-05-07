@@ -16,27 +16,28 @@ class RedisLock implements LockInterface
 {
     //缓存redis
     private $redis;
-
     //队列锁最大进程进程数量
     private $max_queue_process = 100;
-
-    //进程名称
+    //抢占锁名称
+    private $lock_name;
+    //队列锁名称
+    private $queue_lock_name;
+    //队列锁进程数名称
     private $queue_lock_process_name;
-
     //等待list名称
     private $queue_lock_list_name;
-
     //锁值
     private $lock_val;
-
     //是否删除等待锁进程
     private $is_del_queue_lock_process = true;
-
     //是否删除锁
     private $is_del_lock = true;
-
     //随机数
     private $rand_num;
+    //队列锁前缀
+    private $queue_lock_prefix = 'queue:lock';
+    //抢占锁前缀
+    private $lock_prefix = 'lock';
 
     /**
      * RedisLock constructor.
@@ -60,9 +61,10 @@ class RedisLock implements LockInterface
     public function lock($closure, $lock_val, $expiration = 60)
     {
         $this->lock_val = $lock_val;
-        $this->randNum();
+        $lock_name = $this->setLockName();
+        $rand_num  = $this->randNum();
 
-        if ( $this->redis->set($this->lock_val, $this->rand_num, 'nx', 'ex', $expiration) ) {
+        if ( $this->redis->set($lock_name, $rand_num, 'nx', 'ex', $expiration) ) {
             $closure($this->redis);
 
             $this->delLock();
@@ -83,21 +85,25 @@ class RedisLock implements LockInterface
     public function queueLock($closure, $lock_val, $max_queue_process = null, $expiration = 60)
     {
         $this->lock_val = $lock_val;
-        $this->randNum();
+        $queue_lock_name = $this->setQueueLockName();
+
+        $rand_num = $this->randNum();
 
         $this->initQueueLockProcess();
-        $this->initQueueLockList();
+
+        $queue_lock_list_name = $this->initQueueLockList();
+
         $this->addQueueLockProcess($max_queue_process);
 
         loop:
-        $this->redis->blpop($this->queue_lock_list_name, $expiration);
+        $this->redis->blpop($queue_lock_list_name, $expiration);
 
-        if ( $this->redis->set($this->lock_val, $this->rand_num, 'nx', 'ex', $expiration) ) {
+        if ( $this->redis->set($queue_lock_name, $rand_num, 'nx', 'ex', $expiration) ) {
             $closure($this->redis);
 
             $this->delQueueLockProcess();
 
-            $this->delLock();
+            $this->delQueueLock();
 
             $this->addQueueLockList();
         }else{
@@ -111,7 +117,7 @@ class RedisLock implements LockInterface
      */
     private function setQueueLockProcessName()
     {
-        return $this->queue_lock_process_name = 'queueLock:process:'.$this->lock_val;
+        return $this->queue_lock_process_name = $this->queue_lock_prefix. ':process:' .$this->lock_val;
     }
 
     /**
@@ -120,7 +126,25 @@ class RedisLock implements LockInterface
      */
     private function setQueueLockListName()
     {
-        return $this->queue_lock_list_name = 'lock:list:'.$this->queue_lock_process_name;
+        return $this->queue_lock_list_name = $this->queue_lock_prefix. ':list:' .$this->lock_val;
+    }
+
+    /**
+     * 设置lock名称
+     * @return string
+     */
+    private function setLockName()
+    {
+        return $this->lock_name = $this->lock_prefix. ':' .$this->lock_val;
+    }
+
+    /**
+     * 设置队列锁名称
+     * @return string
+     */
+    private function setQueueLockName()
+    {
+        return $this->queue_lock_name = $this->queue_lock_prefix. ':' .$this->lock_val;
     }
 
     /**
@@ -144,6 +168,8 @@ class RedisLock implements LockInterface
         if ($one_queue == 0 && $this->redis->llen($queue_lock_list_name) == 0){
             $this->addQueueLockList();
         }
+
+        return $queue_lock_list_name;
     }
 
     /**
@@ -187,13 +213,26 @@ class RedisLock implements LockInterface
     }
 
     /**
-     * 删除锁
+     * 删除占用锁
      */
     private function delLock()
     {
         if ($this->is_del_lock){
-            if ($this->rand_num == $this->redis->get($this->lock_val)){
-                $this->redis->del($this->lock_val);
+            if ($this->rand_num == $this->redis->get($this->lock_name)){
+                $this->redis->del($this->lock_name);
+            }
+            $this->is_del_lock = false;
+        }
+    }
+
+    /**
+     * 删除队列锁
+     */
+    private function delQueueLock()
+    {
+        if ($this->is_del_lock){
+            if ($this->rand_num == $this->redis->get($this->queue_lock_name)){
+                $this->redis->del($this->queue_lock_name);
             }
             $this->is_del_lock = false;
         }
@@ -204,7 +243,7 @@ class RedisLock implements LockInterface
      */
     private function randNum()
     {
-        $this->rand_num = uniqid() . mt_rand(1, 1000000);
+        return $this->rand_num = uniqid() . mt_rand(1, 1000000);
     }
 
     /**
@@ -238,5 +277,6 @@ class RedisLock implements LockInterface
         // TODO: Implement __destruct() method.
         $this->delQueueLockProcess();
         $this->delLock();
+        $this->delQueueLock();
     }
 }
