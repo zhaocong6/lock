@@ -37,17 +37,15 @@ class Factory
     }
 
     /**
-     * 调用
      * @param $name
      * @param $arguments
-     * @throws LockException
+     * @return mixed
      */
     public function __call($name, $arguments)
     {
         // TODO: Implement __call() method.
 
-
-        call_user_func_array([$this->lock, $name], $arguments);
+        return call_user_func_array([$this->lock, $name], $arguments);
     }
 
     /**

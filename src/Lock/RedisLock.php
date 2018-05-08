@@ -60,6 +60,7 @@ class RedisLock implements LockInterface
      * @param $lock_val
      * @param int $expiration  默认单个任务最大执行时间 60s
      * @throws \Exception
+     * @return mixed
      */
     public function lock($closure, $lock_val, $expiration = 60)
     {
@@ -69,9 +70,9 @@ class RedisLock implements LockInterface
         $rand_num  = $this->randNum();
 
         if ( $this->redis->set($lock_name, $rand_num, 'nx', 'ex', $expiration) ) {
-            $closure($this->redis);
-
+            $closure_res = $closure($this->redis);
             $this->delLock();
+            return $closure_res;
         }else{
             throw new LockException('操作频繁, 被服务器拒绝!');
         }
@@ -85,6 +86,7 @@ class RedisLock implements LockInterface
      * @param int $max_queue_process   最大等待进程数
      * @param int $expiration  默认单个任务最大执行时间 60s
      * @throws \Exception
+     * @return mixed
      */
     public function queueLock($closure, $lock_val, $max_queue_process = null, $expiration = 60)
     {
@@ -105,13 +107,15 @@ class RedisLock implements LockInterface
         $this->redis->blpop($queue_lock_list_name, $expiration);
 
         if ( $this->redis->set($queue_lock_name, $rand_num, 'nx', 'ex', $expiration) ) {
-            $closure($this->redis);
+            $closure_res = $closure($this->redis);
 
             $this->delQueueLockProcess();
 
             $this->delQueueLock();
 
             $this->addQueueLockList();
+
+            return $closure_res;
         }else{
             goto loop;
         }

@@ -31,22 +31,24 @@ class Lock
      * @param $name
      * @param $arguments
      * @throws LockException
+     * @return mixed
      */
     public static function __callStatic($name, $arguments)
     {
         $single = self::singleInstance();
 
-        call_user_func_array([$single, $name], $arguments);
+        return call_user_func_array([$single, $name], $arguments);
     }
 
     /**
      * 实例化调用
      * @param $name
      * @param $arguments
+     * @return mixed
      */
     public function __call($name, $arguments)
     {
-        call_user_func_array([$this->many, $name], $arguments);
+        return call_user_func_array([$this->many, $name], $arguments);
     }
 
     /**
