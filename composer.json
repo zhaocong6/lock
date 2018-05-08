@@ -18,7 +18,8 @@
     "autoload": {
         "psr-4": {
           "Lock\\": "src/",
-          "Lock\\Lock\\": "src/Lock"
+          "Lock\\Lock\\": "src/Lock",
+          "Lock\\Factory": "src/Factory"
         }
     }
 }
