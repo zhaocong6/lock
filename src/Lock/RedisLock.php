@@ -49,6 +49,7 @@ class RedisLock implements LockInterface
     public function __construct($config = [], $params = [])
     {
         ignore_user_abort(true);
+        $this->shutdown();
         $this->initRedis($config);
         $this->initParams($params);
     }
@@ -279,14 +280,32 @@ class RedisLock implements LockInterface
     }
 
     /**
+     * 防止php致命错误
+     */
+    private function shutdown()
+    {
+        register_shutdown_function(function (){
+            $this->forcedShutdown();
+        });
+    }
+
+    /**
+     * 强制关闭
+     */
+    private function forcedShutdown()
+    {
+        $this->delQueueLockProcess();
+        $this->delLock();
+        $this->delQueueLock();
+    }
+
+    /**
      * 删除锁
      * 防止程序中止后没解锁
      */
     public function __destruct()
     {
         // TODO: Implement __destruct() method.
-        $this->delQueueLockProcess();
-        $this->delLock();
-        $this->delQueueLock();
+        $this->forcedShutdown();
     }
 }
