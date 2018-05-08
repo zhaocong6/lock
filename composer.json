@@ -19,7 +19,7 @@
         "psr-4": {
           "Lock\\": "src/",
           "Lock\\Lock\\": "src/Lock",
-          "Lock\\Factory": "src/Factory"
+          "Lock\\Factory\\": "src/Factory"
         }
     }
 }
