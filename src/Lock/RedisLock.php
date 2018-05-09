@@ -195,6 +195,7 @@ class RedisLock implements LockInterface
         $current_queue_process = $this->redis->get($this->queue_lock_process_name);
 
         if ($current_queue_process >= $this->max_queue_process){
+            $this->is_del_queue_lock_process = false;
             throw new LockException('操作频繁, 被服务器拒绝!');
         }else{
             $this->redis->incr($this->queue_lock_process_name);
