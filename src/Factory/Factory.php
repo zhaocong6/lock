@@ -78,7 +78,13 @@ class Factory
 
         //判断是否是实例化传值
         if (!empty($config)) {
+            $config = array_merge([
+                'host'   =>  '127.0.0.1',
+                'port'   =>  '6379',
+                'drive'  =>  'redis',
+            ], $config);
             $this->drive = $config['drive'];
+
             return $this->config = $config[$this->drive];
         }
 
