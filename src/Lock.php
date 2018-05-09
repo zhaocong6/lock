@@ -10,7 +10,7 @@ namespace Lock;
 
 use Lock\Factory\Factory;
 
-class Lock
+class Lock implements LockContextInterface
 {
     private static $single;
     private $many;
