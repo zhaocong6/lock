@@ -22,6 +22,13 @@ class Factory
     //驱动
     private $drive;
 
+    //默认配置
+    private $default_config = [
+        'host'   =>  '127.0.0.1',
+        'port'   =>  '6379',
+        'drive'  =>  'redis',
+    ];
+
     /**
      * Factory constructor.
      * @param array $config
@@ -78,11 +85,7 @@ class Factory
 
         //判断是否是实例化传值
         if (!empty($config)) {
-            $config = array_merge([
-                'host'   =>  '127.0.0.1',
-                'port'   =>  '6379',
-                'drive'  =>  'redis',
-            ], $config);
+            $config = array_merge($this->default_config, $config);
             $this->drive = $config['drive'];
 
             return $this->config = $config[$this->drive];
@@ -96,11 +99,8 @@ class Factory
 
         //设置默认参数
         if (empty($this->config)){
-            $this->config = [
-                'host'  =>  '127.0.0.1',
-                'port'  =>  '6379'
-            ];
-            $this->drive = 'redis';
+            $config      = $this->default_config;
+            $this->drive = $config['drive'];
         }
 
         return $this->config;
