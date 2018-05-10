@@ -20,28 +20,42 @@ window [github redis window](https://github.com/dmajkic/redis/downloads)
 # lock 安装     
     composer require nabao/lock
 
+#抢占锁    
+## lock(callable $callback, string $lock_val, int $expiration = 60)
+多进程并发时, 其中某一个进程得到锁后, 其他进程将被拒绝
+    
+    
+    $callback  
+                回调函数, 可返回值
+    $lock_val
+                锁定值
+    $expiration
+                进程最大执行时间   
+       
+#队列锁
+## queueLock($closure, $lock_val, $max_queue_process = 100, $expiration = 60) 
+多进程并发时, 其中某一个进程得到锁后, 其他进程将等待解锁(配置最大等待进程后, 超过等待数量后进程将被拒绝)
+
+    $callback  
+                    回调函数, 可返回值
+    $lock_val
+                    锁定值
+    $max_queue_process        
+                    队列最大等待进程        
+    $expiration
+                    进程最大执行时间   
+
 # 使用
     
     //静态调用
-    //不需要实例化,使用方便.配置
-    <?php
-        
-    use Lock\Lock;
-        
     $lock_val = 'user:pay:1';
-        
     Lock::lock(function($redis){
        echo 'hello world!';
     }, $lock_val);
             
     //实例化调用
-    <?php
-    
-    use Lock\Lock;
-   
     $lock = new Lock();
     $lock_val = 'user:pay:1';
-    
     $lock->lock(function($redis){
         echo 'hello world!';
     }, $lock_val);
@@ -74,26 +88,3 @@ window [github redis window](https://github.com/dmajkic/redis/downloads)
                 'max_queue_process' => 100
             ]
         ]
-    
-# lock() 抢占锁
-    
-    lock(callable $callback, string $lock_val, int $expiration = 60);
-    
-    $callback  
-                回调函数, 可返回值
-    $lock_val
-                锁定值
-    $expiration
-                进程最大执行时间   
-       
-# queueLock() 队列锁
-
-    queueLock($closure, $lock_val, $max_queue_process = 100, $expiration = 60)
-    $callback  
-                    回调函数, 可返回值
-    $lock_val
-                    锁定值
-    $max_queue_process        
-                    队列最大等待进程        
-    $expiration
-                    进程最大执行时间   
