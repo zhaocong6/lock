@@ -64,32 +64,36 @@ window [github redis window](https://github.com/dmajkic/redis/downloads)
         |   max_queue_process  进程池最大进程
         |
         */
-    return [
         'lock'=>[
-                'drive' =>  'redis',
-                'redis' =>  [
-                    'host'  =>  '127.0.0.1',
-                    'port'  =>  '6379'
-                ],
-                'params' => [
-                    'max_queue_process' => 100
-                ]
+            'drive' =>  'redis',
+            'redis' =>  [
+                'host'  =>  '127.0.0.1',
+                'port'  =>  '6379'
+            ],
+            'params' => [
+                'max_queue_process' => 100
             ]
         ]
     
 # lock() 抢占锁
     
-    $lock->lock(function($redis){
-            echo 'hello world!';
-        }, $lock_val);
-        
-    特点:性能好, 并发高
-    缺点:当一个进程获得抢占锁后,其他进程将全被拒绝
+    lock(callable $callback, string $lock_val, int $expiration = 60);
+    
+    $callback  
+                回调函数, 可返回值
+    $lock_val
+                锁定值
+    $expiration
+                进程最大执行时间   
+       
 # queueLock() 队列锁
 
-    $lock->queueLock(function($redis){
-            echo 'hello world!';
-        }, $lock_val);
-    
-    特点:适用于需要排队的系统, 当一个进程获得锁后,其他进程将排队(排队会有队列池,超过队列池的进程会被拒绝,保证系统稳定性)
-    缺点:性能低
+    queueLock($closure, $lock_val, $max_queue_process = 100, $expiration = 60)
+    $callback  
+                    回调函数, 可返回值
+    $lock_val
+                    锁定值
+    $max_queue_process        
+                    队列最大等待进程        
+    $expiration
+                    进程最大执行时间   
