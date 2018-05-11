@@ -19,10 +19,7 @@ window [github redis window](https://github.com/dmajkic/redis/downloads)
     composer require predis/predis
 # lock 安装     
     composer require nabao/lock
-
-
-#抢占锁    
-
+# 抢占锁
 ## lock(callable $callback, string $lock_val, int $expiration = 60)
 多进程并发时, 其中某一个进程得到锁后, 其他进程将被拒绝
     
@@ -34,7 +31,7 @@ window [github redis window](https://github.com/dmajkic/redis/downloads)
     $expiration
                 进程最大执行时间   
        
-#队列锁
+# 队列锁
 
 ## queueLock($closure, $lock_val, $max_queue_process = 100, $expiration = 60) 
 多进程并发时, 其中某一个进程得到锁后, 其他进程将等待解锁(配置最大等待进程后, 超过等待数量后进程将被拒绝)
@@ -64,7 +61,7 @@ window [github redis window](https://github.com/dmajkic/redis/downloads)
     }, $lock_val);
     
 # config配置
-##目前兼容tp.其它框架请实例化传参
+## 目前兼容tp.其它框架请实例化传参
 
      /*
         |--------------------------------------------------------------------------
