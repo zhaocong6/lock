@@ -238,6 +238,7 @@ class RedisLock implements LockInterface
             if ($this->rand_num == $this->redis->get($this->lock_name)){
                 $this->redis->del($this->lock_name);
             }
+
             $this->is_del_lock = false;
         }
     }
@@ -251,7 +252,8 @@ class RedisLock implements LockInterface
             if ($this->rand_num == $this->redis->get($this->queue_lock_name)){
                 $this->redis->del($this->queue_lock_name);
             }
-            $this->is_del_lock = false;
+
+            $this->is_del_queue_lock = false;
         }
     }
 
