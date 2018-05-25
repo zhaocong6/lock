@@ -29,11 +29,11 @@ class RedisLock implements LockInterface
     //锁值
     private $lock_val;
     //是否删除等待锁进程
-    private $is_del_queue_lock_process = true;
+    private $is_del_queue_lock_process = false;
     //是否删除等待锁
-    private $is_del_queue_lock = true;
+    private $is_del_queue_lock = false;
     //是否删除锁
-    private $is_del_lock = true;
+    private $is_del_lock = false;
     //随机数
     private $rand_num;
     //队列锁前缀
@@ -65,7 +65,10 @@ class RedisLock implements LockInterface
      */
     public function lock($closure, $lock_val, $expiration = 60)
     {
-        $this->is_del_lock = true;
+        $this->is_del_lock                  = true;
+        $this->is_del_queue_lock_process    = false;
+        $this->is_del_queue_lock            = false;
+
         $this->lock_val = $lock_val;
         $lock_name = $this->setLockName();
         $rand_num  = $this->randNum();
@@ -91,8 +94,10 @@ class RedisLock implements LockInterface
      */
     public function queueLock($closure, $lock_val, $max_queue_process = null, $expiration = 60)
     {
-        $this->is_del_queue_lock_process = true;
-        $this->is_del_queue_lock = true;
+        $this->is_del_lock                  = false;
+        $this->is_del_queue_lock_process    = true;
+        $this->is_del_queue_lock            = true;
+
         $this->lock_val = $lock_val;
         $queue_lock_name = $this->setQueueLockName();
 
