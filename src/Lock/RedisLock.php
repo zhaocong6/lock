@@ -78,7 +78,7 @@ class RedisLock implements LockInterface
             $this->delLock();
             return $closure_res;
         }else{
-            throw new LockException('操作频繁, 被服务器拒绝!');
+            throw new LockException('操作频繁, 被服务器拒绝!', 403);
         }
     }
 
@@ -110,7 +110,8 @@ class RedisLock implements LockInterface
         $this->addQueueLockProcess($max_queue_process);
 
         loop:
-        $this->redis->blpop($queue_lock_list_name, $expiration);
+        $wait = $this->redis->blpop($queue_lock_list_name, $expiration);
+        if (is_null($wait)) throw new LockException('等待超时!', 504);
 
         if ( $this->redis->set($queue_lock_name, $rand_num, 'nx', 'ex', $expiration) ) {
             $closure_res = $closure($this->redis);
@@ -201,7 +202,7 @@ class RedisLock implements LockInterface
 
         if ($current_queue_process >= $this->max_queue_process){
             $this->is_del_queue_lock_process = false;
-            throw new LockException('操作频繁, 被服务器拒绝!');
+            throw new LockException('操作频繁, 被服务器拒绝!', 403);
         }else{
             $this->redis->incr($this->queue_lock_process_name);
             $this->redis->expire($this->queue_lock_process_name, 120);
