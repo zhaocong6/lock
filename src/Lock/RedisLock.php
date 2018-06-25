@@ -109,6 +109,7 @@ class RedisLock implements LockInterface
 
         $this->addQueueLockProcess($max_queue_process);
 
+        loop:
         $wait = $this->redis->blpop($queue_lock_list_name, $expiration);
         if (is_null($wait)) throw new LockException('等待超时!', 504);
 
@@ -122,6 +123,8 @@ class RedisLock implements LockInterface
             $this->addQueueLockList();
 
             return $closure_res;
+        }else{
+            goto loop;
         }
     }
 
