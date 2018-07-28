@@ -273,7 +273,10 @@ class RedisLock implements LockInterface
     private function initRedis($config)
     {
         if (!empty($config)){
-            $config = array_merge($config, ['read_write_timeout'=>0]);
+            $config = array_merge($config, [
+                'read_write_timeout'=>  0,
+                'persistent'        =>  true
+            ]);
         }
         $this->redis = new Client($config);
     }
