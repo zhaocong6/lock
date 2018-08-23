@@ -63,7 +63,7 @@ class RedisLock implements LockInterface
      * @throws \Exception
      * @return mixed
      */
-    public function lock($closure, $lock_val, $expiration = 60)
+    public function lock($closure, $lock_val, $expiration = 5)
     {
         $this->is_del_lock                  = true;
         $this->is_del_queue_lock_process    = false;
@@ -92,7 +92,7 @@ class RedisLock implements LockInterface
      * @throws \Exception
      * @return mixed
      */
-    public function queueLock($closure, $lock_val, $max_queue_process = null, $expiration = 60)
+    public function queueLock($closure, $lock_val, $max_queue_process = null, $expiration = 5)
     {
         $this->is_del_lock                  = false;
         $this->is_del_queue_lock_process    = true;
