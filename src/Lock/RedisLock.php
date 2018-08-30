@@ -49,9 +49,13 @@ class RedisLock implements LockInterface
     public function __construct($config = [], $params = [])
     {
         ignore_user_abort(true);
-        $this->shutdown();
-        $this->initRedis($config);
-        $this->initParams($params);
+        try{
+            $this->shutdown();
+            $this->initRedis($config);
+            $this->initParams($params);
+        }catch (\Error $exception){
+            $this->forcedShutdown();
+        }
     }
 
     /**
@@ -73,8 +77,14 @@ class RedisLock implements LockInterface
         $lock_name = $this->setLockName();
         $rand_num  = $this->randNum();
 
-        if ( $this->redis->set($lock_name, $rand_num, 'nx', 'ex', $expiration) ) {
-            $closure_res = $closure($this->redis);
+        if ($this->redis->set($lock_name, $rand_num, 'nx', 'ex', $expiration)) {
+
+            try{
+                $closure_res = $closure($this->redis);
+            }catch (\Error $exception){
+                $this->forcedShutdown();
+            }
+
             $this->delLock();
             return $closure_res;
         }else{
@@ -113,8 +123,13 @@ class RedisLock implements LockInterface
         $wait = $this->redis->blpop($queue_lock_list_name, $expiration);
         if (is_null($wait)) throw new LockException('等待超时!', 504);
 
-        if ( $this->redis->set($queue_lock_name, $rand_num, 'nx', 'ex', $expiration) ) {
-            $closure_res = $closure($this->redis);
+        if ($this->redis->set($queue_lock_name, $rand_num, 'nx', 'ex', $expiration)) {
+
+            try{
+                $closure_res = $closure($this->redis);
+            }catch (\Error $exception){
+                $this->forcedShutdown();
+            }
 
             $this->delQueueLockProcess();
 
@@ -214,8 +229,10 @@ class RedisLock implements LockInterface
      */
     private function addQueueLockList()
     {
-        $this->redis->lpush($this->queue_lock_list_name, true);
-        $this->redis->expire($this->queue_lock_list_name, 180);
+        if ($this->queue_lock_list_name){
+            $this->redis->lpush($this->queue_lock_list_name, true);
+            $this->redis->expire($this->queue_lock_list_name, 10);
+        }
     }
 
     /**
@@ -224,7 +241,14 @@ class RedisLock implements LockInterface
     private function delQueueLockProcess()
     {
         if ($this->is_del_queue_lock_process){
-            $this->redis->decr($this->queue_lock_process_name);
+
+            $queue_nun = $this->redis->get($this->queue_lock_process_name);
+
+            if ($queue_nun > 0){
+                $this->redis->decr($this->queue_lock_process_name);
+            }elseif ($queue_nun < 0){
+                $this->redis->set($this->queue_lock_process_name, 0);
+            }
 
             $this->is_del_queue_lock_process = false;
         }
@@ -313,6 +337,7 @@ class RedisLock implements LockInterface
         $this->delQueueLockProcess();
         $this->delLock();
         $this->delQueueLock();
+        $this->addQueueLockList();
     }
 
     /**
