@@ -99,7 +99,7 @@ class RedisLock implements LockInterface
      * @throws \Exception
      * @return mixed
      */
-    public function queueLock($closure, $lock_val, $max_queue_process = null, $timeout = 60)
+    public function queueLock($closure, $lock_val, $max_queue_process = null, $timeout = 6)
     {
         $this->is_del_lock                  = false;
         $this->is_del_queue_lock_process    = true;
@@ -129,11 +129,8 @@ class RedisLock implements LockInterface
             }
 
             $this->delQueueLockProcess();
-
             $this->delQueueLock();
-
             $this->addQueueLockList();
-
             return $closure_res;
         }else{
             goto loop;
@@ -182,7 +179,6 @@ class RedisLock implements LockInterface
     private function initQueueLockProcess()
     {
         $queue_lock_process_name = $this->setQueueLockProcessName();
-
         $this->redis->setnx($queue_lock_process_name, 0);
     }
 
@@ -191,13 +187,24 @@ class RedisLock implements LockInterface
      */
     private function initQueueLockList()
     {
-        $one_queue = $this->redis->get($this->queue_lock_process_name);
 
         $queue_lock_list_name = $this->setQueueLockListName();
-        if ($one_queue == 0 && $this->redis->llen($queue_lock_list_name) == 0){
-            $this->addQueueLockList();
-        }
 
+        $lua = <<<LUA
+            local queueLockProcessName = KEYS[1]
+            local queueLockListName    = KEYS[2]
+            local expiration           = ARGV[1]
+            local lockProcessNum       = tonumber(redis.call('get', queueLockProcessName))
+            local queueLockListLen     = redis.call('llen', queueLockListName)
+            
+            if(lockProcessNum == 0 and queueLockListLen == 0)
+            then
+                redis.call('lpush', queueLockListName, 1)
+                redis.call('expire', queueLockListName, expiration)
+            end
+LUA;
+
+        $this->redis->eval($lua, 2, $this->queue_lock_process_name, $queue_lock_list_name, $this->expiration);
         return $queue_lock_list_name;
     }
 
@@ -208,16 +215,27 @@ class RedisLock implements LockInterface
      */
     private function addQueueLockProcess($max_queue_process)
     {
-        if (!is_null($max_queue_process)) $this->max_queue_process = $max_queue_process;
+        if ($max_queue_process) $this->max_queue_process = $max_queue_process;
 
-        $current_queue_process = $this->redis->get($this->queue_lock_process_name);
+        $lua = <<<LUA
+            local queueLockProcessName   = KEYS[1]
+            local maxQueueProcess        = tonumber(ARGV[1])
+            local expiration             = tonumber(ARGV[2])
+            local currentQueueProcessNum = tonumber(redis.call('get', queueLockProcessName))
+     
+            if(currentQueueProcessNum == maxQueueProcess)
+            then
+                return false
+            else
+                redis.call('incr', queueLockProcessName)
+                redis.call('expire', queueLockProcessName, expiration)
+                return true
+            end
+LUA;
 
-        if ($current_queue_process >= $this->max_queue_process){
+        if (!$this->redis->eval($lua, 1, $this->queue_lock_process_name, $this->max_queue_process, $this->expiration)){
             $this->is_del_queue_lock_process = false;
             throw new LockException('操作频繁, 被服务器拒绝!', 403);
-        }else{
-            $this->redis->incr($this->queue_lock_process_name);
-            $this->redis->expire($this->queue_lock_process_name, 120);
         }
     }
 
@@ -226,10 +244,8 @@ class RedisLock implements LockInterface
      */
     private function addQueueLockList()
     {
-        if ($this->queue_lock_list_name){
-            $this->redis->lpush($this->queue_lock_list_name, true);
-            $this->redis->expire($this->queue_lock_list_name, $this->expiration);
-        }
+        $this->redis->lpush($this->queue_lock_list_name, true);
+        $this->redis->expire($this->queue_lock_list_name, $this->expiration);
     }
 
     /**
@@ -238,15 +254,7 @@ class RedisLock implements LockInterface
     private function delQueueLockProcess()
     {
         if ($this->is_del_queue_lock_process){
-
-            $queue_nun = $this->redis->get($this->queue_lock_process_name);
-
-            if ($queue_nun > 0){
-                $this->redis->decr($this->queue_lock_process_name);
-            }elseif ($queue_nun < 0){
-                $this->redis->set($this->queue_lock_process_name, 0);
-            }
-
+            $this->redis->decr($this->queue_lock_process_name);
             $this->is_del_queue_lock_process = false;
         }
     }
@@ -257,10 +265,7 @@ class RedisLock implements LockInterface
     private function delLock()
     {
         if ($this->is_del_lock){
-            if ($this->rand_num == $this->redis->get($this->lock_name)){
-                $this->redis->del($this->lock_name);
-            }
-
+            $this->redis->eval($this->delLockLua(), 2, $this->lock_name, $this->rand_num);
             $this->is_del_lock = false;
         }
     }
@@ -271,10 +276,7 @@ class RedisLock implements LockInterface
     private function delQueueLock()
     {
         if ($this->is_del_queue_lock){
-            if ($this->rand_num == $this->redis->get($this->queue_lock_name)){
-                $this->redis->del($this->queue_lock_name);
-            }
-
+            $this->redis->eval($this->delLockLua(), 2, $this->queue_lock_name, $this->rand_num);
             $this->is_del_queue_lock = false;
         }
     }
@@ -285,6 +287,22 @@ class RedisLock implements LockInterface
     private function randNum()
     {
         return $this->rand_num = uniqid() . mt_rand(1, 1000000);
+    }
+
+    /**
+     * @return string
+     */
+    private function delLockLua()
+    {
+        return <<<LUA
+                local lockName = KEYS[1]
+                local randNum  = KEYS[2]
+                
+                if(randNum == redis.call('get', lockName))
+                then
+                    redis.call('del', lockName)
+                end
+LUA;
     }
 
     /**
