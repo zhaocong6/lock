@@ -1,6 +1,6 @@
 # 环境要求
     
-    1.PHP >= 5.3
+    1.PHP >= 7
     2.composer
     3.redis
     4.predis
