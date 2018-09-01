@@ -16,10 +16,9 @@ interface LockInterface
      * 此锁不会等待, 第一个锁用户没有处理完成, 第二个用户将被拒绝
      * @param $closure
      * @param $lock_val
-     * @param int $expiration  默认单个任务最大执行时间 60s
      * @throws \Exception
      */
-    public function lock($closure, $lock_val, $expiration = 60);
+    public function lock($closure, $lock_val);
 
     /**
      * 队列锁
@@ -27,8 +26,8 @@ interface LockInterface
      * @param $closure
      * @param $lock_val
      * @param int $max_queue_process   最大等待进程数
-     * @param int $expiration  默认单个任务最大执行时间 60s
+     * @param int $timeout  默认单个任务最大执行时间 60s
      * @throws \Exception
      */
-    public function queueLock($closure, $lock_val, $max_queue_process = 100, $expiration = 60);
+    public function queueLock($closure, $lock_val, $max_queue_process = 100, $timeout = 60);
 }

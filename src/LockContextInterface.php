@@ -11,8 +11,8 @@ namespace Lock;
 /**
  * 方便ide索引
  *
- * @method $this lock(Callback $closure, $lock_val, $expiration = 60)
- * @method $this queueLock(Callback $closure, $lock_val, $max_queue_process = 100, $expiration = 60)
+ * @method $this lock(Callback $closure, $lock_val)
+ * @method $this queueLock(Callback $closure, $lock_val, $max_queue_process = 100, $timeout = 60)
  *
  * @author zhaocong <1140253608@qq.com>
  */
