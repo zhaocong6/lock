@@ -254,17 +254,28 @@ LUA;
     private function delQueueLockProcess()
     {
         if ($this->is_del_queue_lock_process){
-            $this->redis->decr($this->queue_lock_process_name);
+
+            $lua = <<<LUA
+            local queueLockProcessName   = KEYS[1]
+            local currentQueueProcessNum = tonumber(redis.call('get', queueLockProcessName))
+     
+            if(currentQueueProcessNum > 0)
+            then
+                redis.call('decr', queueLockProcessName)
+            end
+LUA;
+            $this->redis->eval($lua, 1, $this->queue_lock_process_name);
             $this->is_del_queue_lock_process = false;
         }
     }
+
 
     /**
      * 删除占用锁
      */
     private function delLock()
     {
-        if ($this->is_del_lock){
+        if ($this->is_del_lock && $this->lock_name){
             $this->redis->eval($this->delLockLua(), 2, $this->lock_name, $this->rand_num);
             $this->is_del_lock = false;
         }
@@ -275,7 +286,7 @@ LUA;
      */
     private function delQueueLock()
     {
-        if ($this->is_del_queue_lock){
+        if ($this->is_del_queue_lock && $this->queue_lock_name){
             $this->redis->eval($this->delLockLua(), 2, $this->queue_lock_name, $this->rand_num);
             $this->is_del_queue_lock = false;
         }
