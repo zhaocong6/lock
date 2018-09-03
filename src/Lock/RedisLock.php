@@ -360,9 +360,9 @@ LUA;
      */
     private function forcedShutdown()
     {
-        $this->delQueueLockProcess();
         $this->delLock();
         $this->delQueueLock();
+        $this->delQueueLockProcess();
     }
 
     /**
