@@ -2,7 +2,7 @@
     
     1.PHP >= 7
     2.composer
-    3.redis
+    3.redis(必须支持lua)
     4.predis
     
 # composer 安装
