@@ -76,6 +76,7 @@ window [github redis window](https://github.com/dmajkic/redis/downloads)
         |
         |params 参数配置
         |   max_queue_process  进程池最大进程
+        |   expiration         锁值过期时间
         |
         */
         'lock'=>[
@@ -86,5 +87,6 @@ window [github redis window](https://github.com/dmajkic/redis/downloads)
             ],
             'params' => [
                 'max_queue_process' => 100
+                'expiration'        =>  5
             ]
         ]
