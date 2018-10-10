@@ -14,32 +14,89 @@ use Predis\Client;
 
 class RedisLock implements LockInterface
 {
-    //缓存redis
+    /**
+     * 缓存redis
+     * @var resource
+     */
     private $redis;
-    //队列锁最大进程进程数量
+
+    /**
+     * 队列锁最大进程进程数量
+     * @var int
+     */
     private $max_queue_process = 100;
-    //抢占锁名称
+
+    /**
+     * 抢占锁名称
+     * @var string
+     */
     private $lock_name;
-    //队列锁名称
+
+    /**
+     * 队列锁名称
+     * @var string
+     */
     private $queue_lock_name;
-    //队列锁进程数名称
+
+    /**
+     * 队列锁进程数名称
+     * @var string
+     */
     private $queue_lock_process_name;
-    //等待list名称
+
+    /**
+     * 等待list名称
+     * @var string
+     */
     private $queue_lock_list_name;
-    //锁值
+
+    /**
+     * 锁值
+     * @var string
+     */
     private $lock_val;
-    //是否删除等待锁进程
+
+
+    /**
+     * 是否删除等待锁进程
+     * @var bool
+     */
     private $is_del_queue_lock_process = false;
-    //是否删除等待锁
+
+    /**
+     * 是否删除等待锁
+     * @var bool
+     */
     private $is_del_queue_lock = false;
-    //是否删除锁
+
+    /**
+     * 是否删除锁
+     * @var bool
+     */
     private $is_del_lock = false;
-    //随机数
+
+    /**
+     * 随机数
+     * @var string
+     */
     private $rand_num;
-    //队列锁前缀
+
+    /**
+     * 队列锁前缀
+     * @var string
+     */
     private $queue_lock_prefix = 'queue:lock';
-    //抢占锁前缀
+
+    /**
+     * 抢占锁前缀
+     * @var string
+     */
     private $lock_prefix = 'lock';
+
+    /**
+     * timeout
+     * @var int
+     */
     private $expiration = 5;
 
     /**
