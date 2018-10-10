@@ -106,8 +106,6 @@ class RedisLock implements LockInterface
      */
     public function __construct($config = [], $params = [])
     {
-        ignore_user_abort(true);
-
         $this->shutdown();
         $this->initRedis($config);
         $this->initParams($params);
