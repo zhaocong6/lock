@@ -8,7 +8,7 @@
 
 namespace Lock\Factory;
 
-use Lock\Lock\RedisLock;
+use Lock\Lock\Redis\Lock as RedisLock;
 use Lock\LockException;
 
 class Factory
