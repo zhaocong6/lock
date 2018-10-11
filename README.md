@@ -10,9 +10,8 @@
 移步 [composer中文网](https://www.phpcomposer.com/).
 # redis 安装
 
-linux移步 [redis中文网](http://www.redis.net.cn/)
+[redis中文网](http://www.redis.net.cn/)
 
-window [github redis window](https://github.com/dmajkic/redis/downloads)
 # predis 安装
     composer require predis/predis
 # lock 安装     
