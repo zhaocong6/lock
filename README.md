@@ -9,8 +9,6 @@
 
 移步 [composer中文网](https://www.phpcomposer.com/).
 # redis 安装
-redis不支持window平台, window平台下的redis服务器由微软团队维护,版本一般比较旧.
-一些redis新数据结构和功能会有限制,建议window用户安装linux虚拟机
 
 linux移步 [redis中文网](http://www.redis.net.cn/)
 
