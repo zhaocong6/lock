@@ -1,3 +1,5 @@
+[laravel版本](https://github.com/zhaocong6/laravel-lock)
+
 # 环境要求
     
     1.PHP >= 7
@@ -17,7 +19,7 @@
 # lock 安装     
     composer require nabao/lock
 # 抢占锁
-## lock(callable $callback, string $lock_val, int $expiration = 60)
+## lock(callable $callback, string $lock_val)
 多进程并发时, 其中某一个进程得到锁后, 其他进程将被拒绝
     
     
@@ -25,8 +27,6 @@
                 回调函数, 可返回值
     $lock_val
                 锁定值
-    $expiration
-                进程最大执行时间   
        
 # 队列锁
 
