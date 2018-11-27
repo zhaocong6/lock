@@ -90,6 +90,30 @@ class Lock implements LockInterface
     }
 
     /**
+     * 多参数抢占锁
+     * @param $closure
+     * @param $lock_vals
+     * @return mixed
+     */
+    public function locks($closure, $lock_vals)
+    {
+        $one_lock_val = array_pop($lock_vals);
+        $one_closure = function ()use ($closure, $one_lock_val){
+            return $this->lock($closure, $one_lock_val);
+        };
+
+        $go = array_reduce($lock_vals, function ($next, $lock_val)use ($one_closure){
+            return function ()use ($next, $lock_val, $one_closure){
+                return is_null($next)
+                    ? $this->lock($one_closure, $lock_val)
+                    : $this->lock($next, $lock_val);
+            };
+        });
+
+        return $go();
+    }
+
+    /**
      * 队列锁
      * 此锁会等待, 第一个锁用户没有处理完成, 第二个用户将等待
      * @param $closure
@@ -136,6 +160,31 @@ class Lock implements LockInterface
         }else{
             goto loop;
         }
+    }
+
+    /**
+     * 多参数队列锁
+     * @param $closure
+     * @param $lock_vals
+     * @param null $max_queue_process
+     * @param int $wait_timeout
+     * @return mixed
+     */
+    public function queueLocks($closure, $lock_vals, $max_queue_process = null, $wait_timeout = 6)
+    {
+        $one_lock_val = array_pop($lock_vals);
+        $one_closure = function ()use ($closure, $one_lock_val, $max_queue_process, $wait_timeout){
+            return $this->queueLock($closure, $one_lock_val, $max_queue_process, $wait_timeout);
+        };
+
+        $go = array_reduce($lock_vals, function ($next, $lock_val)use ($one_closure, $max_queue_process, $wait_timeout){
+            return function ()use ($next, $lock_val, $one_closure, $max_queue_process, $wait_timeout){
+                return is_null($next)
+                    ? $this->queueLock($one_closure, $lock_val, $max_queue_process, $wait_timeout)
+                    : $this->queueLock($next, $lock_val, $max_queue_process, $wait_timeout);
+            };
+        });
+        return $go();
     }
 
     /**

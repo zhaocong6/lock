@@ -21,6 +21,13 @@ interface LockInterface
     public function lock($closure, $lock_val);
 
     /**
+     * @param $closure
+     * @param $lock_vals
+     * @return mixed
+     */
+    public function locks($closure, $lock_vals);
+
+    /**
      * 队列锁
      * 此锁会等待, 第一个锁用户没有处理完成, 第二个用户将等待
      * @param $closure
@@ -30,4 +37,13 @@ interface LockInterface
      * @throws \Exception
      */
     public function queueLock($closure, $lock_val, $max_queue_process = 100, $timeout = 60);
+
+    /**
+     * @param $closure
+     * @param $lock_vals
+     * @param int $max_queue_process
+     * @param int $timeout
+     * @return mixed
+     */
+    public function queueLocks($closure, $lock_vals, $max_queue_process = 100, $timeout = 60);
 }
