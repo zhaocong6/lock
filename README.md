@@ -27,6 +27,15 @@
                 回调函数, 可返回值
     $lock_val
                 锁定值
+# 多参数抢占锁
+## lock(callable $callback, array $lock_vals)
+多进程并发时, 其中某一个进程得到锁后, 其他进程将被拒绝
+    
+    
+    $callback  
+                回调函数, 可返回值
+    $lock_vals
+                锁定值(数组)
        
 # 队列锁
 
@@ -42,6 +51,19 @@
     $expiration
                     进程最大执行时间   
 
+# 多参数队列锁
+
+## queueLock($closure, $lock_vals, $max_queue_process = 100) 
+多进程并发时, 其中某一个进程得到锁后, 其他进程将等待解锁(配置最大等待进程后, 超过等待数量后进程将被拒绝)
+
+    $callback  
+                    回调函数, 可返回值
+    $lock_vals
+                    锁定值(数组)
+    $max_queue_process        
+                    队列最大等待进程       
+
+
 # 使用
     
     //静态调用
@@ -53,6 +75,14 @@
     //实例化调用
     $lock = new Lock();
     $lock_val = 'user:pay:1';
+    $lock->lock(function($redis){
+        echo 'hello world!';
+    }, $lock_val);
+    
+    //多参数锁
+    $lock = new Lock();
+    $lock_val[] = 'user:pay:1';
+    $lock_val[] = 'user:pay:2';
     $lock->lock(function($redis){
         echo 'hello world!';
     }, $lock_val);
