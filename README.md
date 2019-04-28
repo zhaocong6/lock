@@ -4,6 +4,7 @@
     2.composer
     3.redis(必须支持lua)
     4.predis
+    5.test
     
 # composer 安装
 
