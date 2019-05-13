@@ -546,13 +546,13 @@ LUA;
             $this->forcedShutdown();
         });
 
-        pcntl_signal(SIGHUP, function(){
-            $this->forcedShutdown();
-        });
-
-        pcntl_signal(SIGTERM, function(){
-            $this->forcedShutdown();
-        });
+//        pcntl_signal(SIGHUP, function(){
+//            $this->forcedShutdown();
+//        });
+//
+//        pcntl_signal(SIGTERM, function(){
+//            $this->forcedShutdown();
+//        });
     }
 
     /**
