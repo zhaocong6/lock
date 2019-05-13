@@ -93,6 +93,10 @@ class Lock implements LockInterface
                 return $closure_res;
             }catch (\Error $exception){
                 $this->forcedShutdown();
+                throw $exception;
+            }catch (\Exception $exception){
+                $this->forcedShutdown();
+                throw $exception;
             }
 
         }else{
@@ -168,6 +172,10 @@ class Lock implements LockInterface
                 return $closure_res;
             }catch (\Error $exception){
                 $this->forcedShutdown();
+                throw $exception;
+            }catch (\Exception $exception){
+                $this->forcedShutdown();
+                throw $exception;
             }
 
         }else{
