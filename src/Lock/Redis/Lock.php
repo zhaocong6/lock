@@ -540,11 +540,16 @@ LUA;
      */
     private function bootSignals()
     {
-        pcntl_async_signals(true);
+        if (function_exists('pcntl_async_signals')){
+            \pcntl_async_signals(true);
 
-        pcntl_signal(SIGINT, function(){
-            $this->forcedShutdown();
-        });
+        }
+
+        if (function_exists('pcntl_signal')){
+            \pcntl_signal(SIGINT, function(){
+                $this->forcedShutdown();
+            });
+        }
 
 //        pcntl_signal(SIGHUP, function(){
 //            $this->forcedShutdown();
