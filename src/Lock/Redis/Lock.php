@@ -61,7 +61,7 @@ class Lock implements LockInterface
      */
     public function __construct($config = [], $params = [])
     {
-        $this->shutdown();
+//        $this->shutdown();
         $this->bootSignals();
         $this->initRedis($config);
         $this->initParams($params);
