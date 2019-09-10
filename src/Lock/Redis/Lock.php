@@ -253,7 +253,7 @@ class Lock implements LockInterface
             
             local res = tonumber(redis.call('setnx', queueLockProcessName, 0))
             
-            if(res == 1)
+            if(res ~= nil and res == 1)
             then
                 redis.call('expire', queueLockProcessName, expiration)
             end
@@ -277,7 +277,7 @@ LUA;
             local lockProcessNum       = tonumber(redis.call('get', queueLockProcessName))
             local queueLockListLen     = redis.call('llen', queueLockListName)
             
-            if(lockProcessNum == 0 and queueLockListLen == 0)
+            if(lockProcessNum ~= nil and lockProcessNum == 0 and queueLockListLen ~= nil and queueLockListLen == 0)
             then
                 redis.call('lpush', queueLockListName, 1)
                 redis.call('expire', queueLockListName, expiration)
@@ -342,7 +342,7 @@ LUA;
             local queueLockProcessName   = KEYS[1]
             local currentQueueProcessNum = tonumber(redis.call('get', queueLockProcessName))
      
-            if(currentQueueProcessNum > 0)
+            if(currentQueueProcessNum ~= nil and currentQueueProcessNum > 0)
             then
                 redis.call('decr', queueLockProcessName)
             end
