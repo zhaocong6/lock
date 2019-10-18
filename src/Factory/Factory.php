@@ -93,8 +93,14 @@ class Factory
 
         //判断是否是tp框架
         if (defined('THINK_VERSION')){
-            $this->drive  = C('lock')['drive'];
-            $this->config = C('lock')[$this->drive];
+            //TP5.0框架
+            if(THINK_VERSION == 5.0){
+                $this->drive  = config('lock')['drive'];
+                $this->config = config('lock')[$this->drive];
+            }else{
+                $this->drive  = C('lock')['drive'];
+                $this->config = C('lock')[$this->drive];
+            }
         }
 
         //设置默认参数
@@ -121,7 +127,12 @@ class Factory
 
         //判断是否是tp框架
         if (defined('THINK_VERSION')){
-            $this->params  = C('lock')['params'];
+            //TP5.0框架
+            if(THINK_VERSION == 5.0){
+                $this->params  = config('lock')['params'];
+            }else{
+                $this->params  = C('lock')['params'];
+            }
         }
 
         return $this->params;
