@@ -72,8 +72,8 @@ class Lock implements LockInterface
      * 此锁不会等待, 第一个锁用户没有处理完成, 第二个用户将被拒绝
      * @param $closure
      * @param $lock_val
-     * @throws \Exception
      * @return mixed
+     * @throws \Exception
      */
     public function lock($closure, $lock_val)
     {
@@ -83,7 +83,7 @@ class Lock implements LockInterface
 
         if ($this->redis->set($current_data->lock_name, $current_data->rand_num, 'nx', 'ex', $current_data->expiration)) {
 
-            try{
+            try {
                 $closure_res = $closure($this->redis);
 
                 $this->delLock($current_data);
@@ -91,15 +91,15 @@ class Lock implements LockInterface
                 unset($this->locks[$current_index]);
 
                 return $closure_res;
-            }catch (\Error $exception){
+            } catch (\Error $exception) {
                 $this->forcedShutdown();
                 throw $exception;
-            }catch (\Exception $exception){
+            } catch (\Exception $exception) {
                 $this->forcedShutdown();
                 throw $exception;
             }
 
-        }else{
+        } else {
             throw new LockException(self::TOO_MANY_REQUESTS_ERROR_MSG, self::TOO_MANY_REQUESTS_ERROR_CODE);
         }
     }
@@ -113,14 +113,14 @@ class Lock implements LockInterface
     public function locks($closure, $lock_vals)
     {
         $one_lock_val = array_pop($lock_vals);
-        $one_closure = function ()use ($closure, $one_lock_val){
+        $one_closure = function () use ($closure, $one_lock_val) {
             return $this->lock($closure, $one_lock_val);
         };
 
         $go = empty($lock_vals)
             ? $one_closure
-            : array_reduce($lock_vals, function ($next, $lock_val)use ($one_closure){
-                return function ()use ($next, $lock_val, $one_closure){
+            : array_reduce($lock_vals, function ($next, $lock_val) use ($one_closure) {
+                return function () use ($next, $lock_val, $one_closure) {
                     return is_null($next)
                         ? $this->lock($one_closure, $lock_val)
                         : $this->lock($next, $lock_val);
@@ -135,10 +135,10 @@ class Lock implements LockInterface
      * 此锁会等待, 第一个锁用户没有处理完成, 第二个用户将等待
      * @param $closure
      * @param $lock_val
-     * @param int $max_queue_process   最大等待进程数
-     * @param int $wait_timeout  队列等待过期时间
-     * @throws \Exception
+     * @param int $max_queue_process 最大等待进程数
+     * @param int $wait_timeout 队列等待过期时间
      * @return mixed
+     * @throws \Exception
      */
     public function queueLock($closure, $lock_val, $max_queue_process = null, $wait_timeout = 6)
     {
@@ -158,7 +158,7 @@ class Lock implements LockInterface
 
         if ($this->redis->set($current_data->queue_lock_name, $current_data->rand_num, 'nx', 'ex', $current_data->expiration)) {
 
-            try{
+            try {
                 $closure_res = $closure($this->redis);
 
                 $this->delQueueLockProcess($current_data);
@@ -170,15 +170,15 @@ class Lock implements LockInterface
                 unset($this->queue_locks[$current_index]);
 
                 return $closure_res;
-            }catch (\Error $exception){
+            } catch (\Error $exception) {
                 $this->forcedShutdown();
                 throw $exception;
-            }catch (\Exception $exception){
+            } catch (\Exception $exception) {
                 $this->forcedShutdown();
                 throw $exception;
             }
 
-        }else{
+        } else {
             goto loop;
         }
     }
@@ -194,14 +194,14 @@ class Lock implements LockInterface
     public function queueLocks($closure, $lock_vals, $max_queue_process = null, $wait_timeout = 6)
     {
         $one_lock_val = array_pop($lock_vals);
-        $one_closure = function ()use ($closure, $one_lock_val, $max_queue_process, $wait_timeout){
+        $one_closure = function () use ($closure, $one_lock_val, $max_queue_process, $wait_timeout) {
             return $this->queueLock($closure, $one_lock_val, $max_queue_process, $wait_timeout);
         };
 
         $go = empty($lock_vals)
             ? $one_closure
-            : array_reduce($lock_vals, function ($next, $lock_val)use ($one_closure, $max_queue_process, $wait_timeout){
-                return function ()use ($next, $lock_val, $one_closure, $max_queue_process, $wait_timeout){
+            : array_reduce($lock_vals, function ($next, $lock_val) use ($one_closure, $max_queue_process, $wait_timeout) {
+                return function () use ($next, $lock_val, $one_closure, $max_queue_process, $wait_timeout) {
                     return is_null($next)
                         ? $this->queueLock($one_closure, $lock_val, $max_queue_process, $wait_timeout)
                         : $this->queueLock($next, $lock_val, $max_queue_process, $wait_timeout);
@@ -220,11 +220,11 @@ class Lock implements LockInterface
      */
     public function isActionAllowed($key, $period, $max_count)
     {
-        $key = 'actionAllowed:'.$key;
+        $key = 'actionAllowed:' . $key;
 
         $msec_time = $this->getMsecTime();
 
-        list(,,$count) = $this->redis->pipeline(function ($pipe)use ($key, $msec_time, $period){
+        list(, , $count) = $this->redis->pipeline(function ($pipe) use ($key, $msec_time, $period) {
 
             $pipe->zadd($key, $msec_time, $msec_time);
 
@@ -312,7 +312,7 @@ LUA;
             end
 LUA;
 
-        if (!$this->redis->eval($lua, 1, $data->queue_lock_process_name, $data->max_queue_process, $data->expiration)){
+        if (!$this->redis->eval($lua, 1, $data->queue_lock_process_name, $data->max_queue_process, $data->expiration)) {
             $data->is_del_queue_lock_process = false;
             throw new LockException(self::TOO_MANY_REQUESTS_ERROR_MSG, self::TOO_MANY_REQUESTS_ERROR_CODE);
         }
@@ -336,7 +336,7 @@ LUA;
      */
     private function delQueueLockProcess(Data $data)
     {
-        if ($data->is_del_queue_lock_process){
+        if ($data->is_del_queue_lock_process) {
 
             $lua = <<<LUA
             local queueLockProcessName   = KEYS[1]
@@ -361,7 +361,7 @@ LUA;
      */
     private function delLock(Data $data)
     {
-        if ($data->is_del_lock && $data->lock_name){
+        if ($data->is_del_lock && $data->lock_name) {
             $this->redis->eval($this->delLockLua(), 2, $data->lock_name, $data->rand_num);
 
             $data->is_del_lock = false;
@@ -375,7 +375,7 @@ LUA;
      */
     private function delQueueLock(Data $data)
     {
-        if ($data->is_del_queue_lock && $data->queue_lock_name){
+        if ($data->is_del_queue_lock && $data->queue_lock_name) {
             $this->redis->eval($this->delLockLua(), 2, $data->queue_lock_name, $data->rand_num);
 
             $data->is_del_queue_lock = false;
@@ -407,8 +407,8 @@ LUA;
         $config = empty($config) ? [] : $config;
 
         $config = array_merge([
-            'read_write_timeout'=>  0,
-            'persistent'        =>  true
+            'read_write_timeout' => 0,
+            'persistent' => true
         ], $config);
 
         $this->redis = new Client($config);
@@ -420,8 +420,8 @@ LUA;
      */
     private function initParams($params)
     {
-        if (!empty($params)){
-            foreach ($params as $key => $item){
+        if (!empty($params)) {
+            foreach ($params as $key => $item) {
                 $this->$key = $item;
             }
         }
@@ -432,7 +432,7 @@ LUA;
      */
     private function shutdown()
     {
-        register_shutdown_function(function (){
+        register_shutdown_function(function () {
             $this->forcedShutdown();
         });
     }
@@ -443,18 +443,18 @@ LUA;
      */
     private function forcedShutdown()
     {
-        if (isset($this->locks)){
+        if (isset($this->locks)) {
 
-            array_walk($this->locks, function ($data){
+            array_walk($this->locks, function ($data) {
                 $this->delLock($data);
             });
 
             unset($this->locks);
         }
 
-        if (isset($this->queue_locks)){
+        if (isset($this->queue_locks)) {
 
-            array_walk($this->queue_locks, function ($data){
+            array_walk($this->queue_locks, function ($data) {
                 $this->delQueueLock($data);
                 $this->delQueueLockProcess($data);
             });
@@ -511,7 +511,7 @@ LUA;
      */
     private function pushQueueLockKey($lock_val)
     {
-        if (isset($this->queue_lock_keys[$lock_val])){
+        if (isset($this->queue_lock_keys[$lock_val])) {
 
             throw new LockException(self::EXISTED_ERROR_MSG, self::PARAMS_ERROR_CODE);
         }
@@ -527,7 +527,7 @@ LUA;
      */
     private function pushLockKey($lock_val)
     {
-        if (isset($this->lock_keys[$lock_val])){
+        if (isset($this->lock_keys[$lock_val])) {
 
             throw new LockException(self::EXISTED_ERROR_MSG, self::PARAMS_ERROR_CODE);
         }
@@ -536,17 +536,30 @@ LUA;
     }
 
     /**
+     * 获取毫秒时间
+     * @return int
+     */
+    private function getMsecTime()
+    {
+        list($msec, $sec) = explode(' ', microtime());
+
+        $msecTime = (float)sprintf('%.0f', (floatval($msec) + floatval($sec)) * 1000);
+
+        return (int)explode('.', $msecTime)[0];
+    }
+
+    /**
      * 注册信号
      */
     private function bootSignals()
     {
-        if (function_exists('pcntl_async_signals')){
+        if (function_exists('pcntl_async_signals')) {
             \pcntl_async_signals(true);
 
         }
 
-        if (function_exists('pcntl_signal')){
-            \pcntl_signal(SIGINT, function(){
+        if (function_exists('pcntl_signal')) {
+            \pcntl_signal(SIGINT, function () {
                 $this->forcedShutdown();
             });
         }
